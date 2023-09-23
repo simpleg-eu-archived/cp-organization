@@ -1,5 +1,6 @@
 use std::time::Duration;
 
+use cp_core::geolocalization::address::Address;
 use cp_microservice::{
     api::{
         server::input::plugins::token_manager::authenticator::authenticator,
@@ -20,17 +21,7 @@ pub const TIMEOUT_CREATE_ORGANIZATION_IN_MILLISECONDS: u64 = 10000u64;
 pub struct CreateOrganization {
     country: String,
     name: String,
-    address: String,
-}
-
-impl Default for CreateOrganization {
-    fn default() -> Self {
-        CreateOrganization {
-            country: "".to_string(),
-            name: "".to_string(),
-            address: "".to_string(),
-        }
-    }
+    address: Address,
 }
 
 pub async fn create_organization(
@@ -126,6 +117,16 @@ use crate::logic::logic_request::LogicRequest::Organization;
 
 const TIMEOUT_AFTER_MILLISECONDS: u64 = 200u64;
 
+impl Default for CreateOrganization {
+    fn default() -> Self {
+        CreateOrganization {
+            country: "".to_string(),
+            name: "".to_string(),
+            address: Address::default(),
+        }
+    }
+}
+
 #[tokio::test]
 pub async fn error_when_serializing_fails() {
     let request_header: RequestHeader =
@@ -190,7 +191,7 @@ pub async fn sends_expected_logic_request() {
             } => {
                 assert_eq!("".to_string(), country);
                 assert_eq!("".to_string(), name);
-                assert_eq!("".to_string(), address);
+                assert_eq!(Address::default(), address);
                 assert_eq!(EXAMPLE_USER_ID.to_string(), user_id)
             }
             _ => panic!("unexpected 'action' type found"),

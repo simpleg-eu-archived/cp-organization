@@ -1,4 +1,5 @@
 use async_channel::Sender;
+use cp_core::geolocalization::address::Address;
 
 use std::time::Duration;
 
@@ -45,7 +46,7 @@ async fn handle_create_organization(
     sender: Sender<StorageRequest>,
     country: String,
     name: String,
-    address: String,
+    address: Address,
     user_id: String,
     api_replier: tokio::sync::oneshot::Sender<Result<(), crate::error::Error>>,
 ) -> Result<(), Error> {
@@ -186,7 +187,7 @@ pub async fn create_organization_sends_expected_storage_request() {
         crate::logic::actions::organization_action::OrganizationAction::Create {
             country: "".to_string(),
             name: "".to_string(),
-            address: "".to_string(),
+            address: Address::default(),
             user_id: "".to_string(),
             replier,
         },
@@ -215,7 +216,7 @@ pub async fn create_organization_sends_expected_storage_request() {
                 } => {
                     assert_eq!("", country);
                     assert_eq!("", name);
-                    assert_eq!("", address);
+                    assert_eq!(Address::default(), address);
                     assert_eq!("", user_id);
                 }
             },

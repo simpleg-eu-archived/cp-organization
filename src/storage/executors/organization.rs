@@ -1,3 +1,4 @@
+use cp_core::geolocalization::address::Address;
 use cp_microservice::error::{Error, ErrorKind};
 use mongodb::Client;
 use tokio::sync::oneshot::Sender;
@@ -35,7 +36,7 @@ async fn handle_create_organization(
     client: Client,
     country: String,
     name: String,
-    address: String,
+    address: Address,
     user_id: String,
     replier: Sender<Result<(), crate::error::Error>>,
 ) -> Result<(), Error> {
