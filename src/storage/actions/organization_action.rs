@@ -8,7 +8,6 @@ pub enum OrganizationAction {
         country: String,
         name: String,
         address: Address,
-        user_id: String,
-        replier: Sender<Result<(), Error>>,
+        replier: Sender<Result<String, Error>>,
     },
 }

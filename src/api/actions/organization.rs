@@ -6,7 +6,7 @@ use cp_microservice::{
         server::input::plugins::token_manager::authenticator::authenticator,
         shared::request::Request,
     },
-    error::{Error, ErrorKind},
+    core::error::{Error, ErrorKind},
 };
 
 use crate::logic::{actions::organization_action::OrganizationAction, logic_request::LogicRequest};
@@ -52,7 +52,8 @@ pub async fn create_organization(
         }
     };
 
-    let (replier, receiver) = tokio::sync::oneshot::channel::<Result<(), crate::error::Error>>();
+    let (replier, receiver) =
+        tokio::sync::oneshot::channel::<Result<String, crate::error::Error>>();
 
     let logic_action = crate::logic::actions::organization_action::OrganizationAction::Create {
         country: payload.country,
