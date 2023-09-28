@@ -1,8 +1,8 @@
 use cp_core::geolocalization::address::Address;
+use cp_microservice::core::error::Error;
 use tokio::sync::oneshot::Sender;
 
-use crate::error::Error;
-
+#[derive(Debug)]
 pub enum OrganizationAction {
     Create {
         country: String,

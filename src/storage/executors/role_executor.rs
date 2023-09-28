@@ -1,7 +1,6 @@
-use bson::doc;
-use mongodb::Client;
-
 use cp_microservice::core::error::{Error, ErrorKind};
+use mongodb::{bson::doc, Client};
+
 use tokio::sync::oneshot::Sender;
 
 use crate::storage::{
@@ -11,35 +10,17 @@ use crate::storage::{
     storage_request::StorageRequest,
 };
 
-pub async fn get_admin_role_id(client: Client, request: StorageRequest) -> Result<(), Error> {
-    match request {
-        StorageRequest::Role(action) => match action {
-            RoleAction::GetAdminRoleId { replier } => {
-                handle_get_admin_role_id(client, replier).await
-            }
-            _ => Err(Error::new(
-                ErrorKind::StorageError,
-                format!("received an unexpected role action"),
-            )),
-        },
-        _ => Err(Error::new(
-            ErrorKind::StorageError,
-            format!("received an unexpected storage request"),
-        )),
-    }
-}
-
-async fn handle_get_admin_role_id(
+pub async fn get_admin_role_id(
     client: Client,
-    replier: Sender<Result<String, crate::error::Error>>,
+    replier: Sender<Result<String, Error>>,
 ) -> Result<(), Error> {
     let role = match client
         .database(DATABASE)
         .collection::<Role>(ROLE_COLLECTION)
         .find_one(
-            doc! {
+            Some(doc! {
                 "default_admin": true
-            },
+            }),
             None,
         )
         .await
@@ -48,34 +29,32 @@ async fn handle_get_admin_role_id(
             match role {
                 Some(role) => role,
                 None => {
-                    if let Err(_) = replier.send(Err(crate::error::Error::new(
-                        crate::error::ErrorKind::StorageGetAdminRoleIdFailure,
-                        "could not find the admin role",
-                    ))) {
+                    let error = Error::new(
+                        ErrorKind::StorageError,
+                        "[storage.role_executor.handle_get_admin_role_id] could not find the admin role",
+                    );
+
+                    if let Err(_) = replier.send(Err(error.clone())) {
                         log::warn!("storage, handle_get_admin_role_id, failed to reply to logic with an error");
                     }
 
-                    return Err(Error::new(
-                        ErrorKind::StorageError,
-                        "could not find the admin role",
-                    ));
+                    return Err(error);
                 }
             }
         }
         Err(error) => {
-            if let Err(_) = replier.send(Err(crate::error::Error::new(
-                crate::error::ErrorKind::StorageGetAdminRoleIdFailure,
-                format!("failed to find the admin role: {}", &error),
-            ))) {
+            let error = Error::new(
+                ErrorKind::StorageError,
+                format!("[storage.role_executor.handle_get_admin_role_id] failed to find the admin role: {}", &error),
+            );
+
+            if let Err(_) = replier.send(Err(error.clone())) {
                 log::warn!(
                     "storage, handle_get_admin_role_id, failed to reply to logic with an error"
                 );
             }
 
-            return Err(Error::new(
-                ErrorKind::StorageError,
-                format!("failed to find the admin role: {}", &error),
-            ));
+            return Err(error);
         }
     };
 

@@ -52,8 +52,7 @@ pub async fn create_organization(
         }
     };
 
-    let (replier, receiver) =
-        tokio::sync::oneshot::channel::<Result<String, crate::error::Error>>();
+    let (replier, receiver) = tokio::sync::oneshot::channel::<Result<String, Error>>();
 
     let logic_action = crate::logic::actions::organization_action::OrganizationAction::Create {
         country: payload.country,
@@ -64,7 +63,7 @@ pub async fn create_organization(
     };
 
     match logic_request_sender
-        .send(LogicRequest::Organization(logic_action))
+        .send(LogicRequest::Organization(Some(logic_action)))
         .await
     {
         Ok(_) => (),
@@ -76,7 +75,7 @@ pub async fn create_organization(
         }
     }
 
-    match timeout(
+    let organization_id = match timeout(
         Duration::from_millis(TIMEOUT_CREATE_ORGANIZATION_IN_MILLISECONDS),
         receiver,
     )
@@ -84,7 +83,7 @@ pub async fn create_organization(
     {
         Ok(result) => match result {
             Ok(result) => match result {
-                Ok(_) => (),
+                Ok(organization_id) => organization_id,
                 Err(error) => {
                     return Err(Error::new(
                         ErrorKind::RequestError,
@@ -105,9 +104,9 @@ pub async fn create_organization(
                 format!("timed out waiting for logic result"),
             ))
         }
-    }
+    };
 
-    Ok(Value::Null)
+    Ok(Value::String(organization_id))
 }
 
 #[cfg(test)]
@@ -183,19 +182,22 @@ pub async fn sends_expected_logic_request() {
 
     match logic_request {
         Organization(action) => match action {
-            OrganizationAction::Create {
-                country,
-                name,
-                address,
-                user_id,
-                replier,
-            } => {
-                assert_eq!("".to_string(), country);
-                assert_eq!("".to_string(), name);
-                assert_eq!(Address::default(), address);
-                assert_eq!(EXAMPLE_USER_ID.to_string(), user_id)
-            }
-            _ => panic!("unexpected 'action' type found"),
+            Some(action) => match action {
+                OrganizationAction::Create {
+                    country,
+                    name,
+                    address,
+                    user_id,
+                    replier,
+                } => {
+                    assert_eq!("".to_string(), country);
+                    assert_eq!("".to_string(), name);
+                    assert_eq!(Address::default(), address);
+                    assert_eq!(EXAMPLE_USER_ID.to_string(), user_id)
+                }
+                _ => panic!("unexpected 'action' type found"),
+            },
+            None => panic!("expected 'Some' got 'None'"),
         },
         _ => panic!("unexpected 'logic_request' type found"),
     }

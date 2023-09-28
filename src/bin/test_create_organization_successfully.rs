@@ -3,6 +3,7 @@ use std::sync::Arc;
 use cp_microservice::{
     api::{
         client::input_consumer::input_consumer::InputConsumer,
+        server::input::plugins::token_manager::authenticator::authenticator::USER_ID_KEY,
         shared::{request::Request, request_header::RequestHeader},
     },
     r#impl::api::{
@@ -88,9 +89,13 @@ pub async fn main() {
         serde_json::from_str::<AmqpQueueRpcPublisher>(amqp_publisher_json).unwrap();
 
     let amqp_input_consumer: AmqpInputConsumer =
-        AmqpInputConsumer::new(channel, publisher, 5000u64);
+        AmqpInputConsumer::new(channel, publisher, 50000u64);
+    let mut request_header =
+        RequestHeader::new("create_organization".to_string(), "1234abcd".to_string());
+    request_header.add_extra(USER_ID_KEY.to_string(), "1234abcd".to_string());
+
     let request: Request = Request::new(
-        RequestHeader::new("create:organization".to_string(), "1234abcd".to_string()),
+        request_header,
         json!({
             "country": "es",
             "name": "example",
@@ -110,6 +115,7 @@ pub async fn main() {
     let response_object = response.as_object().unwrap();
 
     let response_ok = response_object.get("Ok").unwrap();
+    println!("{}", response_ok);
     let organization_id = response_ok.as_str().unwrap();
 
     assert!(organization_id.len() > 0);

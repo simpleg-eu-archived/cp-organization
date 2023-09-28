@@ -1,7 +1,7 @@
+use cp_microservice::core::error::Error;
 use tokio::sync::oneshot::Sender;
 
-use crate::error::Error;
-
+#[derive(Debug)]
 pub enum RoleAction {
     GetAdminRoleId {
         replier: Sender<Result<String, Error>>,
