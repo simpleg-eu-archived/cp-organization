@@ -69,7 +69,7 @@ jobs:
           chmod +x run_tests.sh
           ./run_tests.sh
         env:
-          TEST_AMQP_CONNECTION_FILE: ".config/actions/amqp_connection.json"
-          TEST_MONGODB_CONNECTION_FILE: ".config/actions/mongodb_connection.json"
+          TEST_AMQP_CONNECTION_FILE: "./config/actions/amqp_connection.json"
+          TEST_MONGODB_CONNECTION_FILE: "./config/actions/mongodb_connection.json"
           TEST_AMQP_API_FILE: "./config/actions/amqp_api.json"
           TEST_AMQP_CONNECTION_URI: "amqp://guest:guest@rabbitmq:5672"
