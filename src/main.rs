@@ -2,23 +2,19 @@ use std::{collections::HashMap, future::Future, mem::Discriminant, pin::Pin, syn
 
 use async_channel::Sender;
 use cp_microservice::{
-    api::server::{
-        action::Action,
-        input::{input_plugin::InputPlugin, plugins::token_manager::token_manager::TokenManager},
-    },
+    api::server::{action::Action, input::input_plugin::InputPlugin},
     core::error::Error,
-    r#impl::{
-        api::server::input::amqp_input::AmqpInput,
-        init::{try_initialize_microservice, ApiInitializationPackage, LogicInitializationPackage},
+    r#impl::init::{
+        try_initialize_microservice, ApiInitializationPackage, LogicInitializationPackage,
     },
 };
 use mongodb::{options::ClientOptions, Client};
-use multiple_connections_lapin_wrapper::{
-    amqp_wrapper::AmqpWrapper,
-    config::amqp_connect_config::{self, AmqpConnectConfig},
-};
 
-use crate::{logic::logic_request::LogicRequest, storage::storage_request::StorageRequest};
+use crate::{
+    api::api_actions::get_api_actions,
+    logic::{logic_executors::get_logic_executors, logic_request::LogicRequest},
+    storage::storage_request::StorageRequest,
+};
 
 pub mod api;
 pub mod error;
@@ -59,16 +55,7 @@ pub async fn main() -> Result<(), std::io::Error> {
         }
     };
 
-    let mut api_actions: HashMap<String, Action<LogicRequest>> = HashMap::new();
-
-    api_actions.insert(
-        "create_organization".to_string(),
-        Arc::new(move |request, sender| {
-            Box::pin(crate::api::actions::organization::create_organization(
-                request, sender,
-            ))
-        }),
-    );
+    let api_actions: HashMap<String, Action<LogicRequest>> = get_api_actions();
 
     let api_plugins: Vec<Arc<dyn InputPlugin + Send + Sync>> = vec![];
 
@@ -79,27 +66,7 @@ pub async fn main() -> Result<(), std::io::Error> {
         amqp_api_file,
     };
 
-    let mut logic_executors: HashMap<
-        Discriminant<LogicRequest>,
-        Arc<
-            dyn Fn(
-                    LogicRequest,
-                    Sender<StorageRequest>,
-                )
-                    -> Pin<Box<dyn Future<Output = Result<(), Error>> + Send + Sync>>
-                + Send
-                + Sync,
-        >,
-    > = HashMap::new();
-
-    logic_executors.insert(
-        std::mem::discriminant(&LogicRequest::Organization(None)),
-        Arc::new(move |request, sender| {
-            Box::pin(crate::logic::executors::organization::create_organization(
-                request, sender,
-            ))
-        }),
-    );
+    let logic_executors = get_logic_executors();
 
     let (storage_request_sender, storage_request_receiver) =
         async_channel::bounded::<StorageRequest>(1024usize);
