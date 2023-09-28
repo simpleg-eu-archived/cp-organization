@@ -41,6 +41,13 @@ jobs:
           RABBITMQ_DEFAULT_PASS: guest
         ports:
           - 5672:5672
+      mongodb:
+        image: mongo:6.0
+        env:
+          MONGO_INITDB_ROOT_USERNAME: guest
+          MONGO_INITDB_ROOT_PASSWORD: guest
+        ports:
+          - 27017:27017
           
     timeout-minutes: 10
 
@@ -62,4 +69,7 @@ jobs:
           chmod +x run_tests.sh
           ./run_tests.sh
         env:
+          TEST_AMQP_CONNECTION_FILE: ".config/actions/amqp_connection.json"
+          TEST_MONGODB_CONNECTION_FILE: ".config/actions/mongodb_connection.json"
+          TEST_AMQP_API_FILE: "./config/actions/amqp_api.json"
           TEST_AMQP_CONNECTION_URI: "amqp://guest:guest@rabbitmq:5672"
