@@ -60,9 +60,11 @@ jobs:
           path: 'db'
       - name: Initialize database
         run: |
-          sleep 10s
-          chmod +x db/init.sh
-          ./db/init.sh
+          sleep 5s
+          cd db
+          chmod +x init.sh
+          ./init.sh
+          cd ../
         env:
           MONGODB_CONNECTION_URI: "mongodb://mongodb:27017"
           MONGODB_USERNAME: "guest"
