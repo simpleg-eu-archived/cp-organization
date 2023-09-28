@@ -115,7 +115,6 @@ pub async fn main() {
     let response_object = response.as_object().unwrap();
 
     let response_ok = response_object.get("Ok").unwrap();
-    println!("{}", response_ok);
     let organization_id = response_ok.as_str().unwrap();
 
     assert!(organization_id.len() > 0);
