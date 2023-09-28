@@ -53,6 +53,19 @@ jobs:
 
     if: ${{ needs.changes.outputs.src == 'true' || needs.changes.outputs.test == 'true' }}
     steps:
+      - name: Checkout database initialization
+        uses: actions/checkout@v3
+        with:
+          repository: 'simpleg-eu/cp-organization-db'
+          path: 'db'
+      - name: Initialize database
+        run: |
+          chmod +x db/init.sh
+          ./db/init.sh
+        env:
+          MONGODB_CONNECTION_URI: "mongodb://mongodb:27017"
+          MONGODB_USERNAME: "guest"
+          MONGODB_PASSWORD: "guest"
       - name: Checkout code
         uses: actions/checkout@v3
       - name: Replace placeholder version
