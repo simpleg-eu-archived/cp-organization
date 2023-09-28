@@ -1,0 +1,65 @@
+name: CI/CD
+
+on:
+  push:
+    branches: ["main"]
+
+env:
+  CARGO_TERM_COLOR: always
+    
+jobs:
+  changes:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    outputs:
+      src: ${{ steps.filter.outputs.src }}
+      test: ${{ steps.filter.outputs.test }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      - uses: dorny/paths-filter@v2
+        id: filter
+        with:
+          filters: |
+            src:
+              - 'src/**'
+              - 'Cargo.toml'
+            test:
+              - '.github/workflows/ci-cd.yml'
+              - 'run_tests.sh'
+  ci-cd:
+    needs: changes
+    runs-on: ubuntu-latest
+
+    container: rust:1.72.0
+    services:
+      rabbitmq:
+        image: rabbitmq:3.12
+        env:
+          RABBITMQ_DEFAULT_USER: guest
+          RABBITMQ_DEFAULT_PASS: guest
+        ports:
+          - 5672:5672
+          
+    timeout-minutes: 10
+
+    if: ${{ needs.changes.outputs.src == 'true' || needs.changes.outputs.test == 'true' }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      - name: Replace placeholder version
+        run: |
+          sed -i 's/5123.0.0/${{ vars.MAJOR_VERSION }}.${{ vars.MINOR_VERSION }}.${{ env.PATCH_VERSION }}/' Cargo.toml
+          echo "Version: ${{ vars.MAJOR_VERSION }}.${{ vars.MINOR_VERSION }}.$PATCH_VERSION"
+        env:
+          PATCH_VERSION: ${{ github.run_number }}
+      - name: Run unit tests
+        run: |
+          cargo test
+      - name: Run integration tests
+        run: |
+          chmod +x run_tests.sh
+          ./run_tests.sh
+        env:
+          TEST_AMQP_CONNECTION_URI: "amqp://guest:guest@rabbitmq:5672"
