@@ -8,9 +8,9 @@ pub fn get_api_actions() -> HashMap<String, Action<LogicRequest>> {
     let mut actions: HashMap<String, Action<LogicRequest>> = HashMap::new();
 
     actions.insert(
-        "create_organization".to_string(),
+        "create_org".to_string(),
         Action::new(
-            "create_organization".to_string(),
+            "create_org".to_string(),
             Arc::new(move |request, sender| {
                 Box::pin(crate::api::actions::organization::create_organization(
                     request, sender,

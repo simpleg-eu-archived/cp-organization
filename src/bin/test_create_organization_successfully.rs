@@ -90,8 +90,7 @@ pub async fn main() {
 
     let amqp_input_consumer: AmqpInputConsumer =
         AmqpInputConsumer::new(channel, publisher, 5000u64);
-    let mut request_header =
-        RequestHeader::new("create_organization".to_string(), "1234abcd".to_string());
+    let mut request_header = RequestHeader::new("create_org".to_string(), "1234abcd".to_string());
     request_header.add_extra(USER_ID_KEY.to_string(), "1234abcd".to_string());
 
     let request: Request = Request::new(
