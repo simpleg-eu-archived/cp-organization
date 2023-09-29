@@ -2,16 +2,20 @@ use std::{collections::HashMap, future::Future, mem::Discriminant, pin::Pin, syn
 
 use async_channel::Sender;
 use cp_microservice::{
-    api::server::{action::Action, input::input_plugin::InputPlugin},
+    api::server::input::{action::Action, input_plugin::InputPlugin},
     core::error::Error,
-    r#impl::init::{
-        try_initialize_microservice, ApiInitializationPackage, LogicInitializationPackage,
+    r#impl::{
+        api::server::input::token_manager::open_id_connect_config::OpenIdConnectConfig,
+        init::{try_initialize_microservice, ApiInitializationPackage, LogicInitializationPackage},
     },
 };
 use mongodb::{options::ClientOptions, Client};
 
 use crate::{
-    api::api_actions::get_api_actions,
+    api::{
+        api_actions::get_api_actions,
+        api_plugins::{self, get_api_plugins},
+    },
     logic::{logic_executors::get_logic_executors, logic_request::LogicRequest},
     storage::storage_request::StorageRequest,
 };
@@ -55,9 +59,30 @@ pub async fn main() -> Result<(), std::io::Error> {
         }
     };
 
+    let openid_connect_config_file = match args.nth(0) {
+        Some(openid_connect_config_file) => openid_connect_config_file,
+        None => {
+            return Err(std::io::Error::new(
+                std::io::ErrorKind::InvalidInput,
+                "no openid connect config file provided",
+            ));
+        }
+    };
+
+    let openid_connect_config = get_openid_connect_config(openid_connect_config_file)?;
+
     let api_actions: HashMap<String, Action<LogicRequest>> = get_api_actions();
 
-    let api_plugins: Vec<Arc<dyn InputPlugin + Send + Sync>> = vec![];
+    let api_plugins: Vec<Arc<dyn InputPlugin + Send + Sync>> =
+        match get_api_plugins(openid_connect_config).await {
+            Ok(api_plugins) => api_plugins,
+            Err(error) => {
+                return Err(std::io::Error::new(
+                    std::io::ErrorKind::InvalidData,
+                    format!("failed to get API plugins: {}", &error),
+                ))
+            }
+        };
 
     let api_initialization_package = ApiInitializationPackage::<LogicRequest> {
         amqp_connection_file,
@@ -123,4 +148,26 @@ fn get_mongodb_client_options(
         };
 
     Ok(mongodb_client_options)
+}
+
+fn get_openid_connect_config(
+    openid_connect_config_file: String,
+) -> Result<OpenIdConnectConfig, std::io::Error> {
+    let openid_connect_config_file_content = std::fs::read_to_string(openid_connect_config_file)?;
+
+    let openid_connect_config =
+        match serde_json::from_str::<OpenIdConnectConfig>(&openid_connect_config_file_content) {
+            Ok(openid_connect_config) => openid_connect_config,
+            Err(error) => {
+                return Err(std::io::Error::new(
+                    std::io::ErrorKind::InvalidData,
+                    format!(
+                        "failed to deserialize OpenID Connect config file: {}",
+                        &error
+                    ),
+                ))
+            }
+        };
+
+    Ok(openid_connect_config)
 }
