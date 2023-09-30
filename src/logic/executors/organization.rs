@@ -1,8 +1,9 @@
 use async_channel::Sender;
+use celes::Country;
 use cp_core::geolocalization::address::Address;
 use cp_microservice::core::error::{Error, ErrorKind};
 
-use std::time::Duration;
+use std::{str::FromStr, time::Duration};
 
 use tokio::time::timeout;
 
@@ -58,6 +59,8 @@ async fn handle_create_organization(
     user_id: String,
     api_replier: tokio::sync::oneshot::Sender<Result<String, Error>>,
 ) -> Result<(), Error> {
+    let api_replier = validate_create_organization_input(api_replier, &country, &name, &address)?;
+
     let (api_replier, admin_role_id) = get_admin_role_id(&sender, api_replier).await?;
 
     let (api_replier, organization_id) =
@@ -77,6 +80,125 @@ async fn handle_create_organization(
     }
 
     Ok(())
+}
+
+fn validate_create_organization_input(
+    api_replier: tokio::sync::oneshot::Sender<Result<String, Error>>,
+    country: &String,
+    name: &String,
+    address: &Address,
+) -> Result<tokio::sync::oneshot::Sender<Result<String, Error>>, Error> {
+    if country.is_empty() {
+        let error = Error::new(
+            ErrorKind::LogicError,
+            "[logic.organization.validate_input] country is empty",
+        );
+
+        if let Err(_) = api_replier.send(Err(error.clone())) {
+            log::warn!("failed to reply to api with an error");
+        }
+
+        return Err(error);
+    }
+
+    if name.is_empty() {
+        let error = Error::new(
+            ErrorKind::LogicError,
+            "[logic.organization.validate_input] name is empty",
+        );
+
+        if let Err(_) = api_replier.send(Err(error.clone())) {
+            log::warn!("failed to reply to api with an error");
+        }
+
+        return Err(error);
+    }
+
+    if address.country().is_empty() {
+        let error = Error::new(
+            ErrorKind::LogicError,
+            "[logic.organization.validate_input] address country is empty",
+        );
+
+        if let Err(_) = api_replier.send(Err(error.clone())) {
+            log::warn!("failed to reply to api with an error");
+        }
+
+        return Err(error);
+    }
+
+    if address.city().is_empty() {
+        let error = Error::new(
+            ErrorKind::LogicError,
+            "[logic.organization.validate_input] address city is empty",
+        );
+
+        if let Err(_) = api_replier.send(Err(error.clone())) {
+            log::warn!("failed to reply to api with an error");
+        }
+
+        return Err(error);
+    }
+
+    if address.street().is_empty() {
+        let error = Error::new(
+            ErrorKind::LogicError,
+            "[logic.organization.validate_input] address street is empty",
+        );
+
+        if let Err(_) = api_replier.send(Err(error.clone())) {
+            log::warn!("failed to reply to api with an error");
+        }
+
+        return Err(error);
+    }
+
+    if address.number().is_empty() {
+        let error = Error::new(
+            ErrorKind::LogicError,
+            "[logic.organization.validate_input] address number is empty",
+        );
+
+        if let Err(_) = api_replier.send(Err(error.clone())) {
+            log::warn!("failed to reply to api with an error");
+        }
+
+        return Err(error);
+    }
+
+    if address.postal_code().is_empty() {
+        let error = Error::new(
+            ErrorKind::LogicError,
+            "[logic.organization.validate_input] address postal code is empty",
+        );
+
+        if let Err(_) = api_replier.send(Err(error.clone())) {
+            log::warn!("failed to reply to api with an error");
+        }
+
+        return Err(error);
+    }
+
+    match Country::from_str(country.as_str()) {
+        Ok(_) => (),
+        Err(error) => {
+            let error = Error::new(
+                ErrorKind::LogicError,
+                format!(
+                    "[logic.organization.validate_input] invalid country specified: {}",
+                    &error
+                ),
+            );
+
+            if let Err(_) = api_replier.send(Err(error.clone())) {
+                log::warn!("failed to reply to api with an error");
+            }
+
+            return Err(error);
+        }
+    };
+
+    Ok(api_replier)
 }
 
 async fn get_admin_role_id(
