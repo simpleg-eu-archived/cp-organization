@@ -28,7 +28,7 @@ jobs:
             test:
               - '.github/workflows/ci-cd.yml'
               - 'run_tests.sh'
-  ci-cd:
+  ci:
     needs: changes
     runs-on: ubuntu-latest
 
@@ -89,3 +89,51 @@ jobs:
           TEST_MONGODB_CONNECTION_FILE: "./config/actions/mongodb_connection.json"
           TEST_AMQP_API_FILE: "./config/actions/amqp_api.json"
           TEST_AMQP_CONNECTION_URI: "amqp://guest:guest@rabbitmq:5672"
+  
+  cd:
+    needs: ci
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    container: rust:1.72.0
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      - name: Replace placeholder version
+        run: |
+          sed -i 's/5123.0.0/${{ vars.MAJOR_VERSION }}.${{ vars.MINOR_VERSION }}.${{ env.PATCH_VERSION }}/' Cargo.toml
+          echo "Version: ${{ vars.MAJOR_VERSION }}.${{ vars.MINOR_VERSION }}.$PATCH_VERSION"
+        env:
+          PATCH_VERSION: ${{ github.run_number }}
+      - name: Build
+        run: |
+          cargo build --release
+      - name: Create release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PATCH_VERSION: ${{ github.run_number }}
+        with:
+          tag_name: ${{ vars.MAJOR_VERSION }}.${{ vars.MINOR_VERSION }}.${{ env.PATCH_VERSION }}
+          release_name: ${{ vars.MAJOR_VERSION }}.${{ vars.MINOR_VERSION }}.${{ env.PATCH_VERSION }}
+          draft: false
+          prerelease: false
+      - name: Upload release asset
+        id: upload-release-asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./target/release/cp-organization
+          asset_name: cp-organization
+          asset_content_type: application/x-executable
+      - name: Containerize & push
+        run: |
+          docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
+          docker build -t gabriel0simpleg/cp-organization:${{ vars.MAJOR_VERSION }}.${{ vars.MINOR_VERSION }}.${{ env.PATCH_VERSION }} .
+          docker tag gabriel0simpleg/cp-organization:${{ vars.MAJOR_VERSION }}.${{ vars.MINOR_VERSION }}.${{ env.PATCH_VERSION }} gabriel0simpleg/cp-organization:latest
+          docker push gabriel0simpleg/cp-organization:${{ vars.MAJOR_VERSION }}.${{ vars.MINOR_VERSION }}.${{ env.PATCH_VERSION }}
+          docker push gabriel0simpleg/cp-organization:latest
