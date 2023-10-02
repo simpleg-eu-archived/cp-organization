@@ -48,6 +48,8 @@ jobs:
               asset_name: cp-organization
               asset_content_type: application/x-executable
           - name: Containerize & push
+            env:
+              PATCH_VERSION: ${{ github.run_number }}
             run: |
               docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
               docker build -t gabriel0simpleg/cp-organization:${{ vars.MAJOR_VERSION }}.${{ vars.MINOR_VERSION }}.${{ env.PATCH_VERSION }} .
