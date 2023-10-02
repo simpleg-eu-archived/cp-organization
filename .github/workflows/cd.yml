@@ -23,14 +23,11 @@ jobs:
               echo "Version: ${{ vars.MAJOR_VERSION }}.${{ vars.MINOR_VERSION }}.$PATCH_VERSION"
             env:
               PATCH_VERSION: ${{ github.run_number }}
-          - name: Build
-            run: |
-              cargo build --release
           - name: Create release
             id: create_release
             uses: actions/create-release@v1
             env:
-              GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+              GITHUB_TOKEN: ${{ secrets.TOKEN }}
               PATCH_VERSION: ${{ github.run_number }}
             with:
               tag_name: v${{ vars.MAJOR_VERSION }}.${{ vars.MINOR_VERSION }}.${{ env.PATCH_VERSION }}
@@ -41,7 +38,7 @@ jobs:
             id: upload-release-asset
             uses: actions/upload-release-asset@v1
             env:
-              GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+              GITHUB_TOKEN: ${{ secrets.TOKEN }}
             with:
               upload_url: ${{ steps.create_release.outputs.upload_url }}
               asset_path: ./target/release/cp-organization
