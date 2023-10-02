@@ -23,6 +23,9 @@ jobs:
               echo "Version: ${{ vars.MAJOR_VERSION }}.${{ vars.MINOR_VERSION }}.$PATCH_VERSION"
             env:
               PATCH_VERSION: ${{ github.run_number }}
+          - name: Build
+            run: |
+              cargo build --release
           - name: Create release
             id: create_release
             uses: actions/create-release@v1
