@@ -13,9 +13,7 @@ jobs:
 
         runs-on: ubuntu-latest
         timeout-minutes: 10
-    
-        container: rust:1.72.0
-    
+        
         steps:
           - name: Checkout code
             uses: actions/checkout@v3
