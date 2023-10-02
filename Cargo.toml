@@ -23,11 +23,11 @@ tokio = { version = "1", features = ["full"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 
-mongodb = "2.7.0"
-bson = "2.7.0"
+mongodb = "2.7"
+bson = "2.7"
 
 uuid = { version = "1.1", features = ["v4", "fast-rng", "macro-diagnostics"] }
 
-lapin = "2.1.1"
+lapin = "2.1"
 
-celes = "2.4.0"
+celes = "2.4"
