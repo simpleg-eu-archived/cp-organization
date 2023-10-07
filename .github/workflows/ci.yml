@@ -25,6 +25,7 @@ jobs:
             src:
               - 'src/**'
               - 'Cargo.toml'
+              - 'Dockerfile'
             test:
               - '.github/workflows/ci-cd.yml'
               - 'run_tests.sh'
