@@ -111,6 +111,7 @@ pub async fn main() {
     );
 
     let response: Value = amqp_input_consumer.send_request(request).await.unwrap();
+    println!("Response: {}", &response);
     let response_object = response.as_object().unwrap();
 
     let response_ok = response_object.get("Ok").unwrap();

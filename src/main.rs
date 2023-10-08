@@ -27,11 +27,9 @@ pub mod storage;
 
 #[tokio::main]
 pub async fn main() -> Result<(), std::io::Error> {
-    let mut args = std::env::args();
-
-    let amqp_connection_file = match args.nth(1) {
-        Some(amqp_connection_file) => amqp_connection_file,
-        None => {
+    let amqp_connection_file = match std::env::var("CP_ORGANIZATION_AMQP_CONNECTION_FILE") {
+        Ok(amqp_connection_file) => amqp_connection_file,
+        Err(_) => {
             return Err(std::io::Error::new(
                 std::io::ErrorKind::InvalidInput,
                 "no amqp connection file provided",
@@ -39,9 +37,9 @@ pub async fn main() -> Result<(), std::io::Error> {
         }
     };
 
-    let mongodb_connection_file = match args.nth(0) {
-        Some(mongodb_connection_file) => mongodb_connection_file,
-        None => {
+    let mongodb_connection_file = match std::env::var("CP_ORGANIZATION_MONGODB_CONNECTION_FILE") {
+        Ok(mongodb_connection_file) => mongodb_connection_file,
+        Err(_) => {
             return Err(std::io::Error::new(
                 std::io::ErrorKind::InvalidInput,
                 "no mongodb connection file provided",
@@ -49,9 +47,9 @@ pub async fn main() -> Result<(), std::io::Error> {
         }
     };
 
-    let amqp_api_file = match args.nth(0) {
-        Some(amqp_api_file) => amqp_api_file,
-        None => {
+    let amqp_api_file = match std::env::var("CP_ORGANIZATION_AMQP_API_FILE") {
+        Ok(amqp_api_file) => amqp_api_file,
+        Err(_) => {
             return Err(std::io::Error::new(
                 std::io::ErrorKind::InvalidInput,
                 "no amqp api file provided",
@@ -59,15 +57,16 @@ pub async fn main() -> Result<(), std::io::Error> {
         }
     };
 
-    let openid_connect_config_file = match args.nth(0) {
-        Some(openid_connect_config_file) => openid_connect_config_file,
-        None => {
-            return Err(std::io::Error::new(
-                std::io::ErrorKind::InvalidInput,
-                "no openid connect config file provided",
-            ));
-        }
-    };
+    let openid_connect_config_file =
+        match std::env::var("CP_ORGANIZATION_OPENID_CONNECT_CONFIG_FILE") {
+            Ok(openid_connect_config_file) => openid_connect_config_file,
+            Err(_) => {
+                return Err(std::io::Error::new(
+                    std::io::ErrorKind::InvalidInput,
+                    "no openid connect config file provided",
+                ));
+            }
+        };
 
     let openid_connect_config = get_openid_connect_config(openid_connect_config_file)?;
 
