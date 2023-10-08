@@ -25,9 +25,14 @@ pub mod error;
 pub mod logic;
 pub mod storage;
 
+const AMQP_CONNECTION_FILE: &str = "CP_ORGANIZATION_AMQP_CONNECTION_FILE";
+const MONGODB_CONNECTION_FILE: &str = "CP_ORGANIZATION_MONGODB_CONNECTION_FILE";
+const AMQP_API_FILE: &str = "CP_ORGANIZATION_AMQP_API_FILE";
+const OPENID_CONNECT_CONFIG_FILE: &str = "CP_ORGANIZATION_OPENID_CONNECT_CONFIG_FILE";
+
 #[tokio::main]
 pub async fn main() -> Result<(), std::io::Error> {
-    let amqp_connection_file = match std::env::var("CP_ORGANIZATION_AMQP_CONNECTION_FILE") {
+    let amqp_connection_file = match std::env::var(AMQP_CONNECTION_FILE) {
         Ok(amqp_connection_file) => amqp_connection_file,
         Err(_) => {
             return Err(std::io::Error::new(
@@ -37,7 +42,7 @@ pub async fn main() -> Result<(), std::io::Error> {
         }
     };
 
-    let mongodb_connection_file = match std::env::var("CP_ORGANIZATION_MONGODB_CONNECTION_FILE") {
+    let mongodb_connection_file = match std::env::var(MONGODB_CONNECTION_FILE) {
         Ok(mongodb_connection_file) => mongodb_connection_file,
         Err(_) => {
             return Err(std::io::Error::new(
@@ -47,7 +52,7 @@ pub async fn main() -> Result<(), std::io::Error> {
         }
     };
 
-    let amqp_api_file = match std::env::var("CP_ORGANIZATION_AMQP_API_FILE") {
+    let amqp_api_file = match std::env::var(AMQP_API_FILE) {
         Ok(amqp_api_file) => amqp_api_file,
         Err(_) => {
             return Err(std::io::Error::new(
@@ -57,16 +62,15 @@ pub async fn main() -> Result<(), std::io::Error> {
         }
     };
 
-    let openid_connect_config_file =
-        match std::env::var("CP_ORGANIZATION_OPENID_CONNECT_CONFIG_FILE") {
-            Ok(openid_connect_config_file) => openid_connect_config_file,
-            Err(_) => {
-                return Err(std::io::Error::new(
-                    std::io::ErrorKind::InvalidInput,
-                    "no openid connect config file provided",
-                ));
-            }
-        };
+    let openid_connect_config_file = match std::env::var(OPENID_CONNECT_CONFIG_FILE) {
+        Ok(openid_connect_config_file) => openid_connect_config_file,
+        Err(_) => {
+            return Err(std::io::Error::new(
+                std::io::ErrorKind::InvalidInput,
+                "no openid connect config file provided",
+            ));
+        }
+    };
 
     let openid_connect_config = get_openid_connect_config(openid_connect_config_file)?;
 
@@ -133,12 +137,15 @@ pub async fn main() -> Result<(), std::io::Error> {
 fn get_mongodb_client_options(
     mongodb_connection_file: String,
 ) -> Result<ClientOptions, std::io::Error> {
-    let mongodb_connection_file_content = match std::fs::read_to_string(mongodb_connection_file) {
+    let mongodb_connection_file_content = match std::fs::read_to_string(&mongodb_connection_file) {
         Ok(content) => content,
         Err(error) => {
             return Err(std::io::Error::new(
                 std::io::ErrorKind::NotFound,
-                format!("failed to find mongodb connection file: {}", &error),
+                format!(
+                    "failed to find mongodb connection file '{}': {}",
+                    &mongodb_connection_file, &error
+                ),
             ))
         }
     };
@@ -161,12 +168,15 @@ fn get_openid_connect_config(
     openid_connect_config_file: String,
 ) -> Result<OpenIdConnectConfig, std::io::Error> {
     let openid_connect_config_file_content =
-        match std::fs::read_to_string(openid_connect_config_file) {
+        match std::fs::read_to_string(&openid_connect_config_file) {
             Ok(content) => content,
             Err(error) => {
                 return Err(std::io::Error::new(
                     std::io::ErrorKind::NotFound,
-                    format!("failed to find openid connect config file: {}", &error),
+                    format!(
+                        "failed to find openid connect config file '{}': {}",
+                        &openid_connect_config_file, &error
+                    ),
                 ))
             }
         };
