@@ -134,7 +134,15 @@ pub async fn main() -> Result<(), std::io::Error> {
 fn get_mongodb_client_options(
     mongodb_connection_file: String,
 ) -> Result<ClientOptions, std::io::Error> {
-    let mongodb_connection_file_content = std::fs::read_to_string(mongodb_connection_file)?;
+    let mongodb_connection_file_content = match std::fs::read_to_string(mongodb_connection_file) {
+        Ok(content) => content,
+        Err(error) => {
+            return Err(std::io::Error::new(
+                std::io::ErrorKind::NotFound,
+                format!("failed to find mongodb connection file: {}", &error),
+            ))
+        }
+    };
 
     let mongodb_client_options =
         match serde_json::from_str::<ClientOptions>(&mongodb_connection_file_content) {
@@ -153,7 +161,16 @@ fn get_mongodb_client_options(
 fn get_openid_connect_config(
     openid_connect_config_file: String,
 ) -> Result<OpenIdConnectConfig, std::io::Error> {
-    let openid_connect_config_file_content = std::fs::read_to_string(openid_connect_config_file)?;
+    let openid_connect_config_file_content =
+        match std::fs::read_to_string(openid_connect_config_file) {
+            Ok(content) => content,
+            Err(error) => {
+                return Err(std::io::Error::new(
+                    std::io::ErrorKind::NotFound,
+                    format!("failed to find openid connect config file: {}", &error),
+                ))
+            }
+        };
 
     let openid_connect_config =
         match serde_json::from_str::<OpenIdConnectConfig>(&openid_connect_config_file_content) {
