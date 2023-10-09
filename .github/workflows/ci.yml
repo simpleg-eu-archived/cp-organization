@@ -62,7 +62,9 @@ jobs:
           path: 'deps'
       - name: Initialize database
         run: |
+          echo $(ls)
           cd deps
+          echo $(ls)
           chmod +x db_init.sh          
       - name: Checkout code
         uses: actions/checkout@v3
@@ -76,6 +78,7 @@ jobs:
           cargo test
       - name: Run integration tests
         run: |
+          echo $(ls)
           chmod +x run_tests.sh
           ./run_tests.sh
         env:
