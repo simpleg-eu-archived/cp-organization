@@ -11,7 +11,8 @@ else
   echo "Build: SUCCESS"
 fi
 
-mv ./target/debug/* ./
+mv ./target/debug/cp-organization ./cp-organization
+mv ./target/debug/test_create_organization_successfully ./test_create_organization_successfully
 
 result_exit_code=0
 
@@ -66,12 +67,6 @@ fi
 kill $impl_pid
 
 rm ./cp-organization
-rm ./cp-organization.d
 rm ./test_create_organization_successfully
-rm ./test_create_organization_successfully.d
-rm -R ./build
-rm -R ./deps
-rm -R ./examples
-rm -R ./incremental
 
 exit $result_exit_code
