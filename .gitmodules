@@ -1,0 +1,3 @@
+[submodule "deps"]
+	path = deps
+	url = https://github.com/simpleg-eu/cp-organization-compose-deps
