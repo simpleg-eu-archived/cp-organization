@@ -55,19 +55,16 @@ jobs:
 
     if: ${{ needs.changes.outputs.src == 'true' || needs.changes.outputs.test == 'true' }}
     steps:
-      - name: Checkout database initialization
+      - name: Checkout code
         uses: actions/checkout@v3
         with:
-          repository: 'simpleg-eu/cp-organization-compose-deps'
-          path: 'deps'
+          submodules: 'true'
       - name: Initialize database
         run: |
           echo $(ls)
           cd deps
           echo $(ls)
           chmod +x db_init.sh          
-      - name: Checkout code
-        uses: actions/checkout@v3
       - name: Replace placeholder version
         run: |
           sed -i 's/5123.0.0/${{ vars.MAJOR_VERSION }}.${{ vars.MINOR_VERSION }}.${{ env.PATCH_VERSION }}/' Cargo.toml
