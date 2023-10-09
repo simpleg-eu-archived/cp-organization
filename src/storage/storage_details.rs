@@ -1,4 +1,4 @@
-pub const DATABASE: &str = "cuplan";
+pub const DATABASE: &str = "cp_organization";
 
 pub const ORGANIZATION_COLLECTION: &str = "organization";
 pub const ROLE_COLLECTION: &str = "role";
