@@ -47,12 +47,16 @@ impl_pid=$!
 
 sleep 1
 
-# Database initialization
-cd deps
-chmod +x ./db_init.sh
-./db_init.sh
-cd ../
+# Database initialization, to be called before every integration test
+db_init() {
+  cd deps
+  chmod +x ./db_init.sh
+  ./db_init.sh
+  cd ../
+}
 # -----------------------
+
+db_init
 
 ./test_create_organization_successfully $TEST_AMQP_CONNECTION_URI
 
