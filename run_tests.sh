@@ -49,7 +49,9 @@ sleep 1
 
 # Database initialization, to be called before every integration test
 db_init() {
+  echo $(ls)
   cd deps
+  echo $(ls)
   chmod +x ./db_init.sh
   ./db_init.sh
   cd ../
