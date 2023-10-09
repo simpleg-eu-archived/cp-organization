@@ -46,8 +46,12 @@ impl_pid=$!
 
 sleep 1
 
-chmod +x ./deps/db_init.sh
-./deps/db_init.sh
+# Database initialization
+cd deps
+chmod +x ./db_init.sh
+./db_init.sh
+cd ../
+# -----------------------
 
 ./test_create_organization_successfully $TEST_AMQP_CONNECTION_URI
 
