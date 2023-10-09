@@ -58,19 +58,12 @@ jobs:
       - name: Checkout database initialization
         uses: actions/checkout@v3
         with:
-          repository: 'simpleg-eu/cp-organization-db'
-          path: 'db'
+          repository: 'simpleg-eu/cp-organization-compose-deps'
+          path: 'deps'
       - name: Initialize database
         run: |
-          sleep 5s
-          cd db
-          chmod +x init.sh
-          ./init.sh
-          cd ../
-        env:
-          MONGODB_CONNECTION_URI: "mongodb://mongodb:27017"
-          MONGODB_USERNAME: "guest"
-          MONGODB_PASSWORD: "guest"
+          cd deps
+          chmod +x db_init.sh          
       - name: Checkout code
         uses: actions/checkout@v3
       - name: Replace placeholder version
@@ -86,6 +79,9 @@ jobs:
           chmod +x run_tests.sh
           ./run_tests.sh
         env:
+          CP_ORGANIZATION_MONGODB_CONNECTION_URI: "mongodb://mongodb:27017"
+          CP_ORGANIZATION_MONGODB_USERNAME: "guest"
+          CP_ORGANIZATION_MONGODB_PASSWORD: "guest"
           CP_ORGANIZATION_AMQP_CONNECTION_FILE: "./config/actions/amqp_connection.json"
           CP_ORGANIZATION_MONGODB_CONNECTION_FILE: "./config/actions/mongodb_connection.json"
           CP_ORGANIZATION_AMQP_API_FILE: "./config/actions/amqp_api.json"

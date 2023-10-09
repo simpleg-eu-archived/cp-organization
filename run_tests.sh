@@ -36,6 +36,10 @@ TEST_AMQP_CONNECTION_URI=${TEST_AMQP_CONNECTION_URI:=$DEFAULT_AMQP_CONNECTION_UR
 impl_pid=$!
 
 sleep 1
+
+chmod +x ./deps/db_init.sh
+./deps/db_init.sh
+
 ./test_create_organization_successfully $TEST_AMQP_CONNECTION_URI
 
 test_create_organization_successfully_code=$?
