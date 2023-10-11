@@ -16,13 +16,14 @@ use cp_microservice::{
 use mongodb::{options::ClientOptions, Client};
 use multiple_connections_lapin_wrapper::config::amqp_connect_config::AmqpConnectConfig;
 
+const SECRETS_MANAGER_ACCESS_TOKEN_ENV: &str = "SECRETS_MANAGER_ACCESS_TOKEN";
 const AMQP_CONNECTION_CONFIG_SECRET: &str = "CP_ORGANIZATION_AMQP_CONNECTION_SECRET";
 const MONGODB_CONNECTION_CONFIG_SECRET: &str = "CP_ORGANIZATION_MONGODB_CONNECTION_SECRET";
 
 pub fn get_secrets_manager() -> Result<Arc<dyn SecretsManager>, Error> {
-    let access_token = match std::env::args().nth(1) {
-        Some(access_token) => access_token,
-        None => {
+    let access_token = match std::env::var(SECRETS_MANAGER_ACCESS_TOKEN_ENV) {
+        Ok(access_token) => access_token,
+        Err(_) => {
             return Err(Error::new(
                 ErrorKind::InvalidInput,
                 "no access token provided",
