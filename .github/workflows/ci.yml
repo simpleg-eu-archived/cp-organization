@@ -6,6 +6,7 @@ on:
 
 env:
   CARGO_TERM_COLOR: always
+  CP_ENVIRONMENT: 1 # Environment mode: 0 Development, 1 Github Actions, 2 Production
     
 jobs:
   changes:
@@ -79,11 +80,5 @@ jobs:
           chmod +x run_tests.sh
           ./run_tests.sh
         env:
-          CP_ORGANIZATION_MONGODB_CONNECTION_URI: "mongodb://mongodb:27017"
-          CP_ORGANIZATION_MONGODB_USERNAME: "guest"
-          CP_ORGANIZATION_MONGODB_PASSWORD: "guest"
-          CP_ORGANIZATION_AMQP_CONNECTION_FILE: "./config/actions/amqp_connection.json"
-          CP_ORGANIZATION_MONGODB_CONNECTION_FILE: "./config/actions/mongodb_connection.json"
           CP_ORGANIZATION_AMQP_API_FILE: "./config/actions/amqp_api.json"
           CP_ORGANIZATION_OPENID_CONNECT_CONFIG_FILE: "./config/actions/openid_connect_config.json"
-          TEST_AMQP_CONNECTION_URI: "amqp://guest:guest@rabbitmq:5672"
