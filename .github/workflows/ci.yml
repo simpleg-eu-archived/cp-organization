@@ -7,7 +7,7 @@ on:
 env:
   CARGO_TERM_COLOR: always
   CP_ENVIRONMENT: 1 # Environment mode: 0 Development, 1 Github Actions, 2 Production
-  SECRETS_MANAGER_ACCESS_TOKEN: ${{ secrets.SECRETS_MANAGER_ACCESS_TOKEN }} # Secrets manager token
+  SECRETS_MANAGER_ACCESS_TOKEN: ${{ secrets.SECRETS_MANAGER_ACCESS_TOKEN }}
     
 jobs:
   changes:
