@@ -1,5 +1,19 @@
 #!/bin/bash
 
+if [[ $CP_ENVIRONMENT -eq 0 ]]; then
+  echo "Development mode"
+  export $(cat ./env/dev.env | xargs)
+elif [[ $CP_ENVIRONMENT -eq 1 ]]; then
+  echo "Github Actions mode"
+  export $(cat ./env/actions.env | xargs)
+elif [[ $CP_ENVIRONMENT -eq 2 ]]; then
+  echo "Production mode"
+  export $(cat ./env/prod.env | xargs)
+else
+  echo "Default development mode"
+  export $(cat ./env/dev.env | xargs)
+fi
+
 cargo build
 
 build_code=$?
@@ -18,49 +32,31 @@ result_exit_code=0
 
 # TEST CREATE ORGANIZATION SUCCESSFULLY, EXPECTED EXIT CODE: 0
 
-DEFAULT_MONGODB_CONNECTION_URI="mongodb://127.0.0.1:27017"
-export CP_ORGANIZATION_MONGODB_CONNECTION_URI=${CP_ORGANIZATION_MONGODB_CONNECTION_URI:=$DEFAULT_MONGODB_CONNECTION_URI}
-
-DEFAULT_MONGODB_USERNAME="guest"
-export CP_ORGANIZATION_MONGODB_USERNAME=${CP_ORGANIZATION_MONGODB_USERNAME:=DEFAULT_MONGODB_USERNAME}
-
-DEFAULT_MONGODB_PASSWORD="guest"
-export CP_ORGANIZATION_MONGODB_PASSWORD=${CP_ORGANIZATION_MONGODB_PASSWORD:=DEFAULT_MONGODB_PASSWORD}
-
-DEFAULT_AMQP_CONNECTION_FILE="./config/local/amqp_connection.json"
-export CP_ORGANIZATION_AMQP_CONNECTION_FILE=${CP_ORGANIZATION_AMQP_CONNECTION_FILE:=$DEFAULT_AMQP_CONNECTION_FILE}
-
-DEFAULT_MONGODB_CONNECTION_FILE="./config/local/mongodb_connection.json"
-export CP_ORGANIZATION_MONGODB_CONNECTION_FILE=${CP_ORGANIZATION_MONGODB_CONNECTION_FILE:=$DEFAULT_MONGODB_CONNECTION_FILE}
-
-DEFAULT_AMQP_API_FILE="./config/local/amqp_api.json"
+DEFAULT_AMQP_API_FILE="./config/dev/amqp_api.json"
 export CP_ORGANIZATION_AMQP_API_FILE=${CP_ORGANIZATION_AMQP_API_FILE:=$DEFAULT_AMQP_API_FILE}
 
-DEFAULT_OPENID_CONNECT_CONFIG_FILE="./config/local/openid_connect_config.json"
+DEFAULT_OPENID_CONNECT_CONFIG_FILE="./config/dev/openid_connect_config.json"
 export CP_ORGANIZATION_OPENID_CONNECT_CONFIG_FILE=${CP_ORGANIZATION_OPENID_CONNECT_CONFIG_FILE:=$DEFAULT_OPENID_CONNECT_CONFIG_FILE}
 
-DEFAULT_AMQP_CONNECTION_URI="amqp://guest:guest@127.0.0.1:5672"
-TEST_AMQP_CONNECTION_URI=${TEST_AMQP_CONNECTION_URI:=$DEFAULT_AMQP_CONNECTION_URI}
-
-./cp-organization &
+./cp-organization $SECRETS_MANAGER_ACCESS_TOKEN $CP_ORGANIZATION_AMQP_API_FILE $CP_ORGANIZATION_OPENID_CONNECT_CONFIG_FILE &
 impl_pid=$!
 
 sleep 1
 
 # Database initialization, to be called before every integration test
 db_init() {
-  echo $(ls)
   cd deps
-  echo $(ls)
   chmod +x ./db_init.sh
-  ./db_init.sh
+  source db_init.sh
   cd ../
 }
 # -----------------------
 
 db_init
 
-./test_create_organization_successfully $TEST_AMQP_CONNECTION_URI
+CP_ORGANIZATION_AMQP_CONNECTION_URI=$(bws secret get $CP_ORGANIZATION_AMQP_CONNECTION_URI_SECRET --access-token $SECRETS_MANAGER_ACCESS_TOKEN | jq -r '.value')
+
+./test_create_organization_successfully $CP_ORGANIZATION_AMQP_CONNECTION_URI
 
 test_create_organization_successfully_code=$?
 if [ $test_create_organization_successfully_code -eq 0 ]; then
