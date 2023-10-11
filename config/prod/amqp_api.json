@@ -1,0 +1,40 @@
+[
+    {
+        "amqp_queue_consumer": {
+            "queue": {
+                "name": "organization",
+                "declare": {
+                    "options": {
+                        "passive": false,
+                        "durable": false,
+                        "exclusive": false,
+                        "auto_delete": false,
+                        "nowait": false
+                    },
+                    "arguments": {}
+                }
+            },
+            "qos": {
+                "prefetch_count": 16,
+                "options": {
+                    "global": false
+                }
+            },
+            "consume": {
+                "options": {
+                    "no_local": false,
+                    "no_ack": false,
+                    "exclusive": false,
+                    "nowait": false
+                },
+                "arguments": {}
+            },
+            "acknowledge": {
+                "multiple": false
+            },
+            "reject": {
+                "requeue": false
+            }
+        }
+    }
+]

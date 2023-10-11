@@ -4,6 +4,6 @@
         "https://simpleg.eu.auth0.com/"
     ],
     "audience": [
-        "organization.cuplan"
+        "cuplan"
     ]
 }

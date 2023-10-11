@@ -1,9 +1,0 @@
-{
-    "hosts": [
-        "mongodb:27017"
-    ],
-    "credential": {
-        "username": "guest",
-        "password": "guest"
-    }
-}
