@@ -75,7 +75,7 @@ pub fn get_amqp_connection_config(
 }
 
 pub fn get_amqp_api() -> Result<Vec<AmqpApiEntry>, Error> {
-    let amqp_api_file = match std::env::args().nth(2) {
+    let amqp_api_file = match std::env::args().nth(1) {
         Some(amqp_api_file) => amqp_api_file,
         None => {
             return Err(Error::new(
@@ -112,7 +112,7 @@ pub fn get_amqp_api() -> Result<Vec<AmqpApiEntry>, Error> {
 }
 
 pub fn get_openid_connect_config() -> Result<OpenIdConnectConfig, Error> {
-    let openid_connect_config_file = match std::env::args().nth(3) {
+    let openid_connect_config_file = match std::env::args().nth(2) {
         Some(openid_connect_config_file) => openid_connect_config_file,
         None => {
             return Err(Error::new(
