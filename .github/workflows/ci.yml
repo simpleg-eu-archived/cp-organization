@@ -28,9 +28,9 @@ jobs:
               - 'src/**'
               - 'Cargo.toml'
               - 'Dockerfile'
-            test:
               - '.github/workflows/ci.yml'
               - '.github/workflows/cd.yml'
+            test:
               - 'run_tests.sh'
   ci:
     needs: changes
