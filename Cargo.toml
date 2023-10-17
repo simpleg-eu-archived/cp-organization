@@ -17,6 +17,7 @@ multiple-connections-lapin-wrapper = "0.1.0"
 async-channel = "1.9"
 
 log = "0.4"
+simple_logger = "4.2"
 
 tokio = { version = "1", features = ["full"] }
 
