@@ -30,6 +30,9 @@ pub mod storage;
 
 #[tokio::main]
 pub async fn main() -> Result<(), Error> {
+    const VERSION: Option<&str> = option_env!("CARGO_PKG_VERSION");
+    log::info!("cp-organization version {}", VERSION.unwrap_or("unknown"));
+
     let secrets_manager: Arc<dyn SecretsManager> = get_secrets_manager()?;
 
     let amqp_connection_config = get_amqp_connection_config(&secrets_manager)?;
