@@ -11,4 +11,4 @@ ssh-keyscan $CP_ORGANIZATION_SSH_HOSTNAME >> ~/.ssh/known_hosts
 eval `ssh-agent`
 ssh-add ~/.ssh/*
 
-ssh -o StrictHostKeyChecking=no $CP_ORGANIZATION_SSH_USERNAME@$CP_ORGANIZATION_SSH_HOSTNAME -p 68  < cd_remote.sh
+ssh $CP_ORGANIZATION_SSH_USERNAME@$CP_ORGANIZATION_SSH_HOSTNAME -p 68  < cd_remote.sh
