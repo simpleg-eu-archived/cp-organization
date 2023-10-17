@@ -91,6 +91,10 @@ jobs:
 
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    env: 
+      CP_ORGANIZATION_SSH_KEY_SECRET: ${{ secrets.CP_ORGANIZATION_SSH_KEY_SECRET }}
+      CP_ORGANIZATION_SSH_USERNAME: ${{ secrets.CP_ORGANIZATION_SSH_USERNAME }}
+      CP_ORGANIZATION_SSH_HOSTNAME: ${{ secrets.CP_ORGANIZATION_SSH_HOSTNAME }}
     
     steps:
       - name: Checkout code
