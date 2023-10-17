@@ -11,6 +11,7 @@ use cp_microservice::{
         try_initialize_microservice, ApiInitializationPackage, LogicInitializationPackage,
     },
 };
+use simple_logger::SimpleLogger;
 
 use crate::{
     api::{api_actions::get_api_actions, api_plugins::get_api_plugins},
@@ -30,6 +31,8 @@ pub mod storage;
 
 #[tokio::main]
 pub async fn main() -> Result<(), Error> {
+    SimpleLogger::new().init().unwrap();
+
     const VERSION: Option<&str> = option_env!("CARGO_PKG_VERSION");
     log::info!("cp-organization version {}", VERSION.unwrap_or("unknown"));
 
