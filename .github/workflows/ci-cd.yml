@@ -133,12 +133,13 @@ jobs:
         env:
           PATCH_VERSION: ${{ github.run_number }}
         run: |
+          # Docker image build
           docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
           docker build -t gabriel0simpleg/cp-organization:${{ vars.MAJOR_VERSION }}.${{ vars.MINOR_VERSION }}.${{ env.PATCH_VERSION }} .
           docker tag gabriel0simpleg/cp-organization:${{ vars.MAJOR_VERSION }}.${{ vars.MINOR_VERSION }}.${{ env.PATCH_VERSION }} gabriel0simpleg/cp-organization:latest
           docker push gabriel0simpleg/cp-organization:${{ vars.MAJOR_VERSION }}.${{ vars.MINOR_VERSION }}.${{ env.PATCH_VERSION }}
           docker push gabriel0simpleg/cp-organization:latest
-
+          # Binary dependencies
           mkdir bin
           cd bin
           curl -LO https://github.com/bitwarden/sdk/releases/download/bws-v0.3.0/bws-x86_64-unknown-linux-gnu-0.3.0.zip
@@ -149,6 +150,6 @@ jobs:
           chmod +x jq
           export PATH=$PATH:$PWD
           cd ../
-          
+          # Continuous deployment
           chmod +x cd.sh
           ./cd.sh
