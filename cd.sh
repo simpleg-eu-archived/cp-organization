@@ -4,6 +4,7 @@ CP_ORGANIZATION_SSH_PRIVATE_KEY=$(bws secret get "$CP_ORGANIZATION_SSH_KEY_SECRE
 
 mkdir ~/.ssh
 echo "$CP_ORGANIZATION_SSH_PRIVATE_KEY" > ~/.ssh/cp_organization_ssh_private_key
+chmod 600 ~/.ssh/cp_organization_ssh_private_key
 
 eval `ssh-agent`
 ssh-add ~/.ssh/*
