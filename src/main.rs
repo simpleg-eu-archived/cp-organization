@@ -7,17 +7,10 @@ use std::{
 use cp_microservice::{
     api::server::input::{action::Action, input_plugin::InputPlugin},
     core::secrets::secrets_manager::SecretsManager,
-    r#impl::{
-        api::{
-            server::input::token_manager::open_id_connect_config::OpenIdConnectConfig,
-            shared::amqp_api_entry::AmqpApiEntry,
-        },
-        core::bitwarden_secrets_manager::BitwardenSecretsManager,
-        init::{try_initialize_microservice, ApiInitializationPackage, LogicInitializationPackage},
+    r#impl::init::{
+        try_initialize_microservice, ApiInitializationPackage, LogicInitializationPackage,
     },
 };
-use mongodb::{options::ClientOptions, Client};
-use multiple_connections_lapin_wrapper::config::amqp_connect_config::AmqpConnectConfig;
 
 use crate::{
     api::{api_actions::get_api_actions, api_plugins::get_api_plugins},
