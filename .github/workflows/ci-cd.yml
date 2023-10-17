@@ -138,6 +138,7 @@ jobs:
           docker tag gabriel0simpleg/cp-organization:${{ vars.MAJOR_VERSION }}.${{ vars.MINOR_VERSION }}.${{ env.PATCH_VERSION }} gabriel0simpleg/cp-organization:latest
           docker push gabriel0simpleg/cp-organization:${{ vars.MAJOR_VERSION }}.${{ vars.MINOR_VERSION }}.${{ env.PATCH_VERSION }}
           docker push gabriel0simpleg/cp-organization:latest
+
           mkdir bin
           cd bin
           curl -LO https://github.com/bitwarden/sdk/releases/download/bws-v0.3.0/bws-x86_64-unknown-linux-gnu-0.3.0.zip
@@ -148,5 +149,6 @@ jobs:
           chmod +x jq
           export PATH=$PATH:$PWD
           cd ../
+          
           chmod +x cd.sh
           ./cd.sh
