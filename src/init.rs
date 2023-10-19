@@ -17,8 +17,8 @@ use mongodb::{options::ClientOptions, Client};
 use multiple_connections_lapin_wrapper::config::amqp_connect_config::AmqpConnectConfig;
 
 const SECRETS_MANAGER_ACCESS_TOKEN_ENV: &str = "CP_ORGANIZATION_SECRETS_MANAGER_ACCESS_TOKEN";
-const AMQP_CONNECTION_CONFIG_SECRET: &str = "CP_ORGANIZATION_AMQP_CONNECTION_SECRET";
-const MONGODB_CONNECTION_CONFIG_SECRET: &str = "CP_ORGANIZATION_MONGODB_CONNECTION_SECRET";
+const AMQP_CONNECTION_CONFIG_SECRET_ENV: &str = "CP_ORGANIZATION_AMQP_CONNECTION_SECRET";
+const MONGODB_CONNECTION_CONFIG_SECRET_ENV: &str = "CP_ORGANIZATION_MONGODB_CONNECTION_SECRET";
 
 pub fn get_secrets_manager() -> Result<Arc<dyn SecretsManager>, Error> {
     let access_token = match std::env::var(SECRETS_MANAGER_ACCESS_TOKEN_ENV) {
@@ -37,14 +37,14 @@ pub fn get_secrets_manager() -> Result<Arc<dyn SecretsManager>, Error> {
 pub fn get_amqp_connection_config(
     secrets_manager: &Arc<dyn SecretsManager>,
 ) -> Result<AmqpConnectConfig, Error> {
-    let secret_id = match std::env::var(AMQP_CONNECTION_CONFIG_SECRET) {
+    let secret_id = match std::env::var(AMQP_CONNECTION_CONFIG_SECRET_ENV) {
         Ok(secret_id) => secret_id,
         Err(_) => {
             return Err(Error::new(
                 ErrorKind::InvalidInput,
                 format!(
                     "failed to read secret id '{}'",
-                    AMQP_CONNECTION_CONFIG_SECRET
+                    AMQP_CONNECTION_CONFIG_SECRET_ENV
                 ),
             ));
         }
@@ -154,14 +154,14 @@ pub fn get_openid_connect_config() -> Result<OpenIdConnectConfig, Error> {
 }
 
 pub fn get_mongodb_client(secrets_manager: &Arc<dyn SecretsManager>) -> Result<Client, Error> {
-    let secret_id = match std::env::var(MONGODB_CONNECTION_CONFIG_SECRET) {
+    let secret_id = match std::env::var(MONGODB_CONNECTION_CONFIG_SECRET_ENV) {
         Ok(secret_id) => secret_id,
         Err(_) => {
             return Err(Error::new(
                 ErrorKind::InvalidInput,
                 format!(
                     "failed to read secret id '{}'",
-                    MONGODB_CONNECTION_CONFIG_SECRET
+                    MONGODB_CONNECTION_CONFIG_SECRET_ENV
                 ),
             ));
         }
