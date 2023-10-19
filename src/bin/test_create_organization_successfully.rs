@@ -6,6 +6,7 @@ use cp_microservice::{
         server::input::plugins::token_manager::authenticator::authenticator::USER_ID_KEY,
         shared::{request::Request, request_header::RequestHeader},
     },
+    core::error::Error,
     r#impl::api::{
         client::input_consumer::amqp_input_consumer::AmqpInputConsumer, server::input::amqp_input,
         shared::amqp_queue_rpc_publisher::AmqpQueueRpcPublisher,
@@ -112,10 +113,9 @@ pub async fn main() {
 
     let response: Value = amqp_input_consumer.send_request(request).await.unwrap();
     println!("Response: {}", &response);
-    let response_object = response.as_object().unwrap();
+    let response_object = serde_json::from_value::<Result<String, Error>>(response).unwrap();
 
-    let response_ok = response_object.get("Ok").unwrap();
-    let organization_id = response_ok.as_str().unwrap();
+    let organization_id = response_object.unwrap();
 
     assert!(organization_id.len() > 0);
 }
