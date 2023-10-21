@@ -3,7 +3,10 @@ use std::time::Duration;
 use cp_core::geolocalization::address::Address;
 use cp_microservice::{
     api::{
-        server::input::plugins::token_manager::authenticator::authenticator,
+        server::input::{
+            action::{extract_payload, extract_user_id},
+            plugins::token_manager::authenticator::authenticator,
+        },
         shared::request::Request,
     },
     core::error::{Error, ErrorKind},
@@ -28,29 +31,9 @@ pub async fn create_organization(
     request: Request,
     logic_request_sender: Sender<LogicRequest>,
 ) -> Result<Value, Error> {
-    let payload: CreateOrganization =
-        match serde_json::from_value::<CreateOrganization>(request.payload().clone()) {
-            Ok(payload) => payload,
-            Err(error) => {
-                return Err(Error::new(
-                    ErrorKind::RequestError,
-                    format!("invalid payload: {}", error),
-                ))
-            }
-        };
+    let payload: CreateOrganization = extract_payload(&request)?;
 
-    let user_id = match request
-        .header()
-        .get_extra(&authenticator::USER_ID_KEY.to_string())
-    {
-        Some(user_id) => user_id.clone(),
-        None => {
-            return Err(Error::new(
-                ErrorKind::RequestError,
-                "missing 'user_id' extra from request header",
-            ))
-        }
-    };
+    let user_id = extract_user_id(&request)?;
 
     let (replier, receiver) = tokio::sync::oneshot::channel::<Result<String, Error>>();
 
@@ -70,7 +53,7 @@ pub async fn create_organization(
         Err(error) => {
             return Err(Error::new(
                 ErrorKind::ApiError,
-                format!("failed to send logic request: {}", error),
+                format!("failed to send logic request: {}", &error),
             ))
         }
     }
@@ -87,14 +70,14 @@ pub async fn create_organization(
                 Err(error) => {
                     return Err(Error::new(
                         ErrorKind::RequestError,
-                        format!("failed to handle request: {}", error),
+                        format!("failed to handle request: {}", &error),
                     ))
                 }
             },
             Err(error) => {
                 return Err(Error::new(
                     ErrorKind::ApiError,
-                    format!("failed to receive logic result: {}", error),
+                    format!("failed to receive logic result: {}", &error),
                 ))
             }
         },
