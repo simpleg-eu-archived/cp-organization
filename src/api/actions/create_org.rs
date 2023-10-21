@@ -27,7 +27,7 @@ pub struct CreateOrganization {
     address: Address,
 }
 
-pub async fn create_organization(
+pub async fn create_org(
     request: Request,
     logic_request_sender: Sender<LogicRequest>,
 ) -> Result<Value, Error> {
@@ -118,7 +118,7 @@ pub async fn error_when_serializing_fails() {
 
     let (sender, _receiver) = async_channel::bounded(1024usize);
 
-    match create_organization(request, sender).await {
+    match create_org(request, sender).await {
         Ok(_) => panic!("expected 'Err' got 'Ok'"),
         Err(error) => assert_eq!(ErrorKind::RequestError, error.kind),
     }
@@ -147,7 +147,7 @@ pub async fn sends_expected_logic_request() {
     let (sender, receiver) = async_channel::bounded(1024usize);
 
     tokio::spawn(async move {
-        create_organization(request, sender).await.unwrap();
+        create_org(request, sender).await.unwrap();
     });
 
     let logic_request = match timeout(
