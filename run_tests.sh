@@ -1,18 +1,12 @@
 #!/bin/bash
+echo "cp-organization: tests runner"
 
-if [[ $CP_ENVIRONMENT -eq 0 ]]; then
-  echo "Development mode"
-  export $(cat ./env/dev.env | xargs)
-elif [[ $CP_ENVIRONMENT -eq 1 ]]; then
-  echo "Github Actions mode"
-  export $(cat ./env/actions.env | xargs)
-elif [[ $CP_ENVIRONMENT -eq 2 ]]; then
-  echo "Production mode"
-  export $(cat ./env/prod.env | xargs)
-else
-  echo "Default development mode"
-  export $(cat ./env/dev.env | xargs)
+if [[ -z "$CP_ORGANIZATION_SECRETS_MANAGER_ACCESS_TOKEN" ]]; then
+  echo "CP_ORGANIZATION_SECRETS_MANAGER_ACCESS_TOKEN is not set."
+  exit 1
 fi
+
+export $(cat .env | xargs)
 
 cargo build
 
@@ -42,7 +36,7 @@ sleep 1
 
 # Database initialization, to be called before every integration test
 db_init() {
-  cd deps
+  cd compose
   chmod +x ./db_init.sh
   source db_init.sh
   cd ../
@@ -51,9 +45,9 @@ db_init() {
 
 db_init
 
-CP_ORGANIZATION_AMQP_CONNECTION_URI=$(bws secret get $CP_ORGANIZATION_AMQP_CONNECTION_URI_SECRET --access-token $CP_ORGANIZATION_SECRETS_MANAGER_ACCESS_TOKEN | jq -r '.value')
+CP_ORGANIZATION_TEST_AMQP_CONNECTION_URI=$(bws secret get $CP_ORGANIZATION_AMQP_CONNECTION_URI_SECRET --access-token $CP_ORGANIZATION_SECRETS_MANAGER_ACCESS_TOKEN | jq -r '.value')
 
-./test_create_organization_successfully $CP_ORGANIZATION_AMQP_CONNECTION_URI
+./test_create_organization_successfully $CP_ORGANIZATION_TEST_AMQP_CONNECTION_URI
 
 test_create_organization_successfully_code=$?
 if [ $test_create_organization_successfully_code -eq 0 ]; then
