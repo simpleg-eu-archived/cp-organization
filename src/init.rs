@@ -111,48 +111,6 @@ pub fn get_amqp_api() -> Result<Vec<AmqpApiEntry>, Error> {
     Ok(amqp_api)
 }
 
-pub fn get_openid_connect_config() -> Result<OpenIdConnectConfig, Error> {
-    let openid_connect_config_file = match std::env::args().nth(2) {
-        Some(openid_connect_config_file) => openid_connect_config_file,
-        None => {
-            return Err(Error::new(
-                ErrorKind::InvalidInput,
-                "no openid connect config file provided",
-            ));
-        }
-    };
-
-    let openid_connect_config_file_content =
-        match std::fs::read_to_string(&openid_connect_config_file) {
-            Ok(content) => content,
-            Err(error) => {
-                return Err(Error::new(
-                    ErrorKind::NotFound,
-                    format!(
-                        "failed to find openid connect config file '{}': {}",
-                        &openid_connect_config_file, &error
-                    ),
-                ))
-            }
-        };
-
-    let openid_connect_config =
-        match serde_json::from_str::<OpenIdConnectConfig>(&openid_connect_config_file_content) {
-            Ok(openid_connect_config) => openid_connect_config,
-            Err(error) => {
-                return Err(Error::new(
-                    ErrorKind::InvalidData,
-                    format!(
-                        "failed to deserialize OpenID Connect config file: {}",
-                        &error
-                    ),
-                ))
-            }
-        };
-
-    Ok(openid_connect_config)
-}
-
 pub fn get_mongodb_client(secrets_manager: &Arc<dyn SecretsManager>) -> Result<Client, Error> {
     let secret_id = match std::env::var(MONGODB_CONNECTION_CONFIG_SECRET_ENV) {
         Ok(secret_id) => secret_id,

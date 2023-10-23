@@ -18,7 +18,7 @@ use async_channel::Sender;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
-pub const TIMEOUT_CREATE_ORGANIZATION_IN_MILLISECONDS: u64 = 10000u64;
+const TIMEOUT_CREATE_ORGANIZATION_IN_MILLISECONDS: u64 = 10000u64;
 
 #[derive(Deserialize, Serialize)]
 pub struct CreateOrganization {
@@ -81,10 +81,10 @@ pub async fn create_org(
                 ))
             }
         },
-        Err(_error) => {
+        Err(_) => {
             return Err(Error::new(
                 ErrorKind::ApiError,
-                format!("timed out waiting for logic result"),
+                "timed out waiting for logic result",
             ))
         }
     };

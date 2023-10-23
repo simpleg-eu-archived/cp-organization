@@ -15,10 +15,7 @@ use simple_logger::SimpleLogger;
 
 use crate::{
     api::{api_actions::get_api_actions, api_plugins::get_api_plugins},
-    init::{
-        get_amqp_api, get_amqp_connection_config, get_mongodb_client, get_openid_connect_config,
-        get_secrets_manager,
-    },
+    init::{get_amqp_api, get_amqp_connection_config, get_mongodb_client, get_secrets_manager},
     logic::{logic_executors::get_logic_executors, logic_request::LogicRequest},
     storage::storage_request::StorageRequest,
 };
@@ -41,20 +38,17 @@ pub async fn main() -> Result<(), Error> {
     let amqp_connection_config = get_amqp_connection_config(&secrets_manager)?;
     let amqp_api = get_amqp_api()?;
 
-    let openid_connect_config = get_openid_connect_config()?;
-
     let api_actions: HashMap<String, Action<LogicRequest>> = get_api_actions();
 
-    let api_plugins: Vec<Arc<dyn InputPlugin + Send + Sync>> =
-        match get_api_plugins(openid_connect_config).await {
-            Ok(api_plugins) => api_plugins,
-            Err(error) => {
-                return Err(Error::new(
-                    ErrorKind::InvalidData,
-                    format!("failed to get API plugins: {}", &error),
-                ))
-            }
-        };
+    let api_plugins: Vec<Arc<dyn InputPlugin + Send + Sync>> = match get_api_plugins().await {
+        Ok(api_plugins) => api_plugins,
+        Err(error) => {
+            return Err(Error::new(
+                ErrorKind::InvalidData,
+                format!("failed to get API plugins: {}", &error),
+            ))
+        }
+    };
 
     let api_initialization_package = ApiInitializationPackage::<LogicRequest> {
         amqp_connection_config,

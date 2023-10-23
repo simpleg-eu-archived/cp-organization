@@ -1,9 +1,0 @@
-{
-    "jwks_uri": "https://simpleg.eu.auth0.com/.well-known/jwks.json",
-    "issuers": [
-        "https://simpleg.eu.auth0.com/"
-    ],
-    "audience": [
-        "cuplan"
-    ]
-}
