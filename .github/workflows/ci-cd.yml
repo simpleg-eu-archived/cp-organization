@@ -85,7 +85,6 @@ jobs:
           ./run_tests.sh
         env:
           CP_ORGANIZATION_AMQP_API_FILE: "./config/actions/amqp_api.json"
-          CP_ORGANIZATION_OPENID_CONNECT_CONFIG_FILE: "./config/actions/openid_connect_config.json"
   cd:
     needs: ci
     if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
