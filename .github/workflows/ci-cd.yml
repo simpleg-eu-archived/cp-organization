@@ -116,8 +116,11 @@ jobs:
       - name: Download artifact
         uses: actions/download-artifact@v3
         with:
-            name: ${{ env.ARTIFACT_NAME }}
-            path: ./target/release/
+          name: ${{ env.ARTIFACT_NAME }}
+          path: ./target/release/
+      - name: Make binary executable
+        run: |
+          chmod +x ./target/release/cp-organization
       - name: Create release
         id: create_release
         uses: actions/create-release@v1
