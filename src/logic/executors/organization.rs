@@ -1,11 +1,12 @@
 use async_channel::Sender;
 use celes::Country;
 use cp_core::geolocalization::address::Address;
-use cp_microservice::core::error::{Error, ErrorKind};
+use cp_microservice::{
+    core::error::{Error, ErrorKind},
+    logic::executor::{timeout_receive_storage_response, timeout_send_storage_request},
+};
 
-use std::{str::FromStr, time::Duration};
-
-use tokio::time::timeout;
+use std::str::FromStr;
 
 use crate::{
     logic::{actions::organization_action::OrganizationAction, logic_request::LogicRequest},
@@ -203,7 +204,7 @@ fn validate_create_organization_input(
 
 async fn get_admin_role_id(
     sender: &Sender<StorageRequest>,
-    api_replier: tokio::sync::oneshot::Sender<Result<String, Error>>,
+    mut api_replier: tokio::sync::oneshot::Sender<Result<String, Error>>,
 ) -> Result<(tokio::sync::oneshot::Sender<Result<String, Error>>, String), Error> {
     let (storage_replier, storage_receiver) =
         tokio::sync::oneshot::channel::<Result<String, Error>>();
@@ -212,86 +213,20 @@ async fn get_admin_role_id(
         replier: storage_replier,
     }));
 
-    match timeout(
-        Duration::from_millis(TIMEOUT_CREATE_ORGANIZATION_IN_MILLISECONDS),
-        sender.send(storage_request),
+    api_replier = timeout_send_storage_request(
+        TIMEOUT_CREATE_ORGANIZATION_IN_MILLISECONDS,
+        storage_request,
+        sender,
+        api_replier,
     )
-    .await
-    {
-        Ok(result) => {
-            if let Err(error) = result {
-                let error = Error::new(
-                    ErrorKind::LogicError,
-                    format!(
-                        "[logic.organization.get_admin_role_id] failed to send storage request: {}",
-                        &error
-                    ),
-                );
+    .await?;
 
-                if let Err(_) = api_replier.send(Err(error.clone())) {
-                    log::warn!("failed to reply to api with an error");
-                }
-
-                return Err(error);
-            }
-        }
-        Err(_) => {
-            let error = Error::new(
-                ErrorKind::LogicError,
-                "[logic.organization.get_admin_role_id] timed out sending storage request",
-            );
-
-            if let Err(_) = api_replier.send(Err(error.clone())) {
-                log::warn!("failed to reply to api with an error");
-            }
-
-            return Err(error);
-        }
-    }
-
-    let admin_role_id = match timeout(
-        Duration::from_millis(TIMEOUT_CREATE_ORGANIZATION_IN_MILLISECONDS),
+    let (api_replier, admin_role_id) = timeout_receive_storage_response(
+        TIMEOUT_CREATE_ORGANIZATION_IN_MILLISECONDS,
         storage_receiver,
+        api_replier,
     )
-    .await
-    {
-        Ok(result) => match result {
-            Ok(result) => match result {
-                Ok(admin_role_id) => admin_role_id,
-                Err(error) => {
-                    if let Err(_) = api_replier.send(Err(error.clone())) {
-                        log::warn!("failed to reply to api with an error");
-                    }
-
-                    return Err(error);
-                }
-            },
-            Err(error) => {
-                let error = Error::new(
-                    ErrorKind::LogicError,
-                    format!("[logic.organization.get_admin_role_id] failed to receive response from storage: {}", &error),
-                );
-
-                if let Err(_) = api_replier.send(Err(error.clone())) {
-                    log::warn!("failed to reply to api with an error");
-                }
-
-                return Err(error);
-            }
-        },
-        Err(_) => {
-            let error = Error::new(
-                ErrorKind::LogicError,
-                "[logic.organization.get_admin_role_id] timed out receiving storage response",
-            );
-
-            if let Err(_) = api_replier.send(Err(error.clone())) {
-                log::warn!("failed to reply to api with an error");
-            }
-
-            return Err(error);
-        }
-    };
+    .await?;
 
     Ok((api_replier, admin_role_id))
 }
@@ -301,7 +236,7 @@ async fn create_organization_and_return_id(
     country: String,
     name: String,
     address: Address,
-    api_replier: tokio::sync::oneshot::Sender<Result<String, Error>>,
+    mut api_replier: tokio::sync::oneshot::Sender<Result<String, Error>>,
 ) -> Result<(tokio::sync::oneshot::Sender<Result<String, Error>>, String), Error> {
     let (storage_replier, storage_receiver) =
         tokio::sync::oneshot::channel::<Result<String, Error>>();
@@ -315,92 +250,20 @@ async fn create_organization_and_return_id(
         },
     ));
 
-    match timeout(
-        Duration::from_millis(TIMEOUT_CREATE_ORGANIZATION_IN_MILLISECONDS),
-        sender.send(storage_request),
+    api_replier = timeout_send_storage_request(
+        TIMEOUT_CREATE_ORGANIZATION_IN_MILLISECONDS,
+        storage_request,
+        sender,
+        api_replier,
     )
-    .await
-    {
-        Ok(result) => match result {
-            Ok(_) => (),
-            Err(error) => {
-                let error = Error::new(
-                    ErrorKind::LogicError,
-                    format!("[logic.organization.create_organization_and_return_id] failed to send storage request forcreate organization: {}", &error),
-                );
+    .await?;
 
-                if let Err(_) = api_replier.send(Err(error.clone())) {
-                    log::warn!("failed to reply to api with an error")
-                }
-
-                return Err(error);
-            }
-        },
-        Err(error) => {
-            let error = Error::new(
-                ErrorKind::LogicError,
-                format!("[logic.organization.create_organization_and_return_id] timed out to create organization: {}", &error),
-            );
-
-            if let Err(_) = api_replier.send(Err(error.clone())) {
-                log::warn!("failed to reply to api with an error")
-            }
-
-            return Err(error);
-        }
-    }
-
-    let organization_id = match timeout(
-        Duration::from_millis(TIMEOUT_CREATE_ORGANIZATION_IN_MILLISECONDS),
+    let (api_replier, organization_id) = timeout_receive_storage_response(
+        TIMEOUT_CREATE_ORGANIZATION_IN_MILLISECONDS,
         storage_receiver,
+        api_replier,
     )
-    .await
-    {
-        Ok(result) => match result {
-            Ok(result) => match result {
-                Ok(organization_id) => organization_id,
-                Err(error) => {
-                    let error = Error::new(
-                        ErrorKind::LogicError,
-                        format!("[logic.organization.create_organization_and_return_id] storage failed to handle request: {}", &error),
-                    );
-
-                    if let Err(_) = api_replier.send(Err(error.clone())) {
-                        log::warn!("failed to reply to api with an error");
-                    }
-
-                    return Err(error);
-                }
-            },
-            Err(error) => {
-                let error = Error::new(
-                    ErrorKind::LogicError,
-                    format!("[logic.organization.create_organization_and_return_id] failed to receive response from storage: {}", &error),
-                );
-
-                if let Err(_) = api_replier.send(Err(error.clone())) {
-                    log::warn!("failed to reply to api with an error")
-                }
-
-                return Err(error);
-            }
-        },
-        Err(error) => {
-            let error = Error::new(
-                ErrorKind::LogicError,
-                format!("[logic.organization.create_organization_and_return_id] timed out receiving response from storage: {}", &error),
-            );
-
-            if let Err(_) = api_replier.send(Err(error.clone())) {
-                log::warn!("failed to reply to api with an error")
-            }
-
-            return Err(Error::new(
-                ErrorKind::LogicError,
-                format!("[logic.organization.create_organization_and_return_id] timed out waiting for storage response: {}", &error),
-            ));
-        }
-    };
+    .await?;
 
     Ok((api_replier, organization_id))
 }
@@ -410,7 +273,7 @@ async fn create_member(
     user_id: String,
     admin_role_id: String,
     organization_id: String,
-    api_replier: tokio::sync::oneshot::Sender<Result<String, Error>>,
+    mut api_replier: tokio::sync::oneshot::Sender<Result<String, Error>>,
 ) -> Result<tokio::sync::oneshot::Sender<Result<String, Error>>, Error> {
     let (storage_replier, storage_receiver) = tokio::sync::oneshot::channel::<Result<(), Error>>();
 
@@ -421,94 +284,20 @@ async fn create_member(
         replier: storage_replier,
     }));
 
-    match timeout(
-        Duration::from_millis(TIMEOUT_CREATE_ORGANIZATION_IN_MILLISECONDS),
-        sender.send(storage_request),
+    api_replier = timeout_send_storage_request(
+        TIMEOUT_CREATE_ORGANIZATION_IN_MILLISECONDS,
+        storage_request,
+        sender,
+        api_replier,
     )
-    .await
-    {
-        Ok(result) => {
-            if let Err(error) = result {
-                let error = Error::new(
-                    ErrorKind::LogicError,
-                    format!(
-                        "[logic.organization.create_member] failed to send storage request: {}",
-                        &error
-                    ),
-                );
+    .await?;
 
-                if let Err(_) = api_replier.send(Err(error.clone())) {
-                    log::warn!("failed to reply to api with an error")
-                }
-
-                return Err(error);
-            }
-        }
-        Err(error) => {
-            let error = Error::new(
-                ErrorKind::LogicError,
-                format!(
-                    "[logic.organization.create_member] timed out sending storage request: {}",
-                    &error
-                ),
-            );
-
-            if let Err(_) = api_replier.send(Err(error.clone())) {
-                log::warn!("failed to reply to api with an error");
-            }
-
-            return Err(error);
-        }
-    }
-
-    match timeout(
-        Duration::from_millis(TIMEOUT_CREATE_ORGANIZATION_IN_MILLISECONDS),
+    let (api_replier, _) = timeout_receive_storage_response(
+        TIMEOUT_CREATE_ORGANIZATION_IN_MILLISECONDS,
         storage_receiver,
+        api_replier,
     )
-    .await
-    {
-        Ok(result) => match result {
-            Ok(result) => {
-                if let Err(error) = result {
-                    if let Err(_) = api_replier.send(Err(error.clone())) {
-                        log::warn!("failed to reply to api with an error")
-                    }
-
-                    return Err(error);
-                }
-            }
-            Err(error) => {
-                let error = Error::new(
-                    ErrorKind::LogicError,
-                    format!(
-                        "[logic.organization.create_member] failed to receive storage response: {}",
-                        &error
-                    ),
-                );
-
-                if let Err(_) = api_replier.send(Err(error.clone())) {
-                    log::warn!("failed to reply to api with an error")
-                }
-
-                return Err(error);
-            }
-        },
-        Err(error) => {
-            let error = Error::new(
-                ErrorKind::LogicError,
-                format!(
-                    "[logic.organization.create_member] timed out receiving storage response: {}",
-                    &error
-                ),
-            );
-
-            if let Err(_) = api_replier.send(Err(error.clone())) {
-                log::warn!("failed to reply to api with an error")
-            }
-
-            return Err(error);
-        }
-    }
+    .await?;
 
     Ok(api_replier)
 }
