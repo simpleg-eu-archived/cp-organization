@@ -66,7 +66,7 @@ impl Default for CreateOrganization {
             country: "".to_string(),
             name: "".to_string(),
             address: Address::default(),
-            user_id: "".to_string(),
+            user_id: "1".to_string(),
         }
     }
 }
