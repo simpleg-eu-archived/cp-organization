@@ -454,7 +454,7 @@ async fn create_member(
             );
 
             if let Err(_) = api_replier.send(Err(error.clone())) {
-                log::warn!("failed to reply to api with an error")
+                log::warn!("failed to reply to api with an error");
             }
 
             return Err(error);
