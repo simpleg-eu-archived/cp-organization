@@ -3,10 +3,7 @@ use std::time::Duration;
 use cp_core::geolocalization::address::Address;
 use cp_microservice::{
     api::{
-        server::input::{
-            action::{extract_payload, extract_user_id},
-            plugins::token_manager::authenticator::authenticator,
-        },
+        server::input::{action::extract_payload, api_action::api_action},
         shared::request::Request,
     },
     core::error::{Error, ErrorKind},
@@ -25,6 +22,7 @@ pub struct CreateOrganization {
     country: String,
     name: String,
     address: Address,
+    user_id: String,
 }
 
 pub async fn create_org(
@@ -33,63 +31,25 @@ pub async fn create_org(
 ) -> Result<Value, Error> {
     let payload: CreateOrganization = extract_payload(&request)?;
 
-    let user_id = extract_user_id(&request)?;
-
     let (replier, receiver) = tokio::sync::oneshot::channel::<Result<String, Error>>();
 
     let logic_action = crate::logic::actions::organization_action::OrganizationAction::Create {
         country: payload.country,
         name: payload.name,
         address: payload.address,
-        user_id: user_id,
+        user_id: payload.user_id,
         replier,
     };
 
-    match logic_request_sender
-        .send(LogicRequest::Organization(Some(logic_action)))
-        .await
-    {
-        Ok(_) => (),
-        Err(error) => {
-            return Err(Error::new(
-                ErrorKind::ApiError,
-                format!("failed to send logic request: {}", &error),
-            ))
-        }
-    }
+    let logic_request = LogicRequest::Organization(Some(logic_action));
 
-    let organization_id = match timeout(
-        Duration::from_millis(TIMEOUT_CREATE_ORGANIZATION_IN_MILLISECONDS),
+    api_action(
+        logic_request,
+        logic_request_sender,
+        TIMEOUT_CREATE_ORGANIZATION_IN_MILLISECONDS,
         receiver,
     )
     .await
-    {
-        Ok(result) => match result {
-            Ok(result) => match result {
-                Ok(organization_id) => organization_id,
-                Err(error) => {
-                    return Err(Error::new(
-                        ErrorKind::RequestError,
-                        format!("failed to handle request: {}", &error),
-                    ))
-                }
-            },
-            Err(error) => {
-                return Err(Error::new(
-                    ErrorKind::ApiError,
-                    format!("failed to receive logic result: {}", &error),
-                ))
-            }
-        },
-        Err(_) => {
-            return Err(Error::new(
-                ErrorKind::ApiError,
-                "timed out waiting for logic result",
-            ))
-        }
-    };
-
-    Ok(Value::String(organization_id))
 }
 
 #[cfg(test)]
@@ -106,6 +66,7 @@ impl Default for CreateOrganization {
             country: "".to_string(),
             name: "".to_string(),
             address: Address::default(),
+            user_id: "".to_string(),
         }
     }
 }
@@ -139,10 +100,6 @@ pub async fn sends_expected_logic_request() {
     };
 
     let mut request: Request = Request::new(request_header, create_organization_payload);
-    request.mut_header().add_extra(
-        authenticator::USER_ID_KEY.to_string(),
-        EXAMPLE_USER_ID.to_string(),
-    );
 
     let (sender, receiver) = async_channel::bounded(1024usize);
 
