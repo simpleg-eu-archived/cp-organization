@@ -105,6 +105,10 @@ jobs:
       CP_ORGANIZATION_SSH_HOSTNAME: ${{ secrets.CP_ORGANIZATION_SSH_HOSTNAME }}
     
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          submodules: 'true'
       - name: Create build directory
         run: |
           mkdir target
