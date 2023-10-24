@@ -3,7 +3,6 @@ use std::sync::Arc;
 use cp_microservice::{
     api::{
         client::input_consumer::input_consumer::InputConsumer,
-        server::input::plugins::token_manager::authenticator::authenticator::USER_ID_KEY,
         shared::{request::Request, request_header::RequestHeader},
     },
     core::error::Error,
@@ -91,8 +90,8 @@ pub async fn main() {
 
     let amqp_input_consumer: AmqpInputConsumer =
         AmqpInputConsumer::new(channel, publisher, 5000u64);
-    let mut request_header = RequestHeader::new("create_org".to_string(), "1234abcd".to_string());
-    request_header.add_extra(USER_ID_KEY.to_string(), "1234abcd".to_string());
+    let mut request_header: RequestHeader =
+        RequestHeader::new("create_org".to_string(), "1234abcd".to_string());
 
     let request: Request = Request::new(
         request_header,
@@ -107,7 +106,8 @@ pub async fn main() {
                 "number": "37",
                 "additional": "",
                 "postal_code": "02600"
-            }
+            },
+            "user_id": "simple0x47@gmail.com"
         }),
     );
 

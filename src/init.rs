@@ -6,10 +6,7 @@ use std::{
 use cp_microservice::{
     core::secrets::secrets_manager::SecretsManager,
     r#impl::{
-        api::{
-            server::input::token_manager::open_id_connect_config::OpenIdConnectConfig,
-            shared::amqp_api_entry::AmqpApiEntry,
-        },
+        api::shared::amqp_api_entry::AmqpApiEntry,
         core::bitwarden_secrets_manager::BitwardenSecretsManager,
     },
 };
