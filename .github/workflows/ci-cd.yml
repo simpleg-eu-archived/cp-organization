@@ -6,8 +6,9 @@ on:
 
 env:
   CARGO_TERM_COLOR: always
-  CP_ENVIRONMENT: 1 # Environment mode: 0 Development, 1 Github Actions, 2 Production
+  CP_ENVIRONMENT: 1 # Development environment mode: 0 Local, 1 Github Actions
   CP_ORGANIZATION_SECRETS_MANAGER_ACCESS_TOKEN: ${{ secrets.CP_ORGANIZATION_SECRETS_MANAGER_ACCESS_TOKEN }}
+  ARTIFACT_NAME: "le_baguette"
     
 jobs:
   changes:
@@ -85,6 +86,13 @@ jobs:
           ./run_tests.sh
         env:
           CP_ORGANIZATION_AMQP_API_FILE: "./config/actions/amqp_api.json"
+      - name: Build release
+        run: |
+          cargo build --release
+      - uses: actions/upload-artifact@v3
+        with:
+          name: ${{ env.ARTIFACT_NAME }}
+          path: ./target/release/cp-organization
   cd:
     needs: ci
     if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
@@ -97,17 +105,15 @@ jobs:
       CP_ORGANIZATION_SSH_HOSTNAME: ${{ secrets.CP_ORGANIZATION_SSH_HOSTNAME }}
     
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-      - name: Replace placeholder version
+      - name: Create build directory
         run: |
-          sed -i 's/5123.0.0/${{ vars.MAJOR_VERSION }}.${{ vars.MINOR_VERSION }}.${{ env.PATCH_VERSION }}/' Cargo.toml
-          echo "Version: ${{ vars.MAJOR_VERSION }}.${{ vars.MINOR_VERSION }}.$PATCH_VERSION"
-        env:
-          PATCH_VERSION: ${{ github.run_number }}
-      - name: Build
-        run: |
-          cargo build --release
+          mkdir target
+          mkdir ./target/release
+      - name: Download artifact
+        uses: actions/download-artifact@v3
+        with:
+            name: ${{ env.ARTIFACT_NAME }}
+            path: ./target/release/
       - name: Create release
         id: create_release
         uses: actions/create-release@v1
@@ -153,3 +159,15 @@ jobs:
           # Continuous deployment
           chmod +x cd.sh
           ./cd.sh
+  clean:
+    if: success() || failure()
+    
+    needs: cd
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    
+    steps:
+      - name: Remove artifact
+        uses: geekyeggo/delete-artifact@v2
+        with:
+          name: ${{ env.ARTIFACT_NAME }}
