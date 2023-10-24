@@ -5,12 +5,12 @@ use mongodb::Client;
 
 use crate::storage::{
     actions::{
-        member_action::MemberAction, organization_action::OrganizationAction,
-        role_action::RoleAction,
+        invitation_code_action::InvitationCodeAction, member_action::MemberAction,
+        organization_action::OrganizationAction, role_action::RoleAction,
     },
     executors::{
-        member_executor::create_member, organization_executor::create_organization,
-        role_executor::get_admin_role_id,
+        invitation_code_executor::create_invitation_code, member_executor::create_member,
+        organization_executor::create_organization, role_executor::get_admin_role_id,
     },
     storage_request::StorageRequest,
 };
@@ -32,8 +32,8 @@ impl Dispatch {
             let storage_request = match self.receiver.recv().await {
                 Ok(storage_request) => storage_request,
                 Err(_) => {
-                    info!("failed to receive storage request");
-                    continue;
+                    info!("failed to receive storage request, stopping storage dispatch");
+                    break;
                 }
             };
 
@@ -84,6 +84,30 @@ impl Dispatch {
                     },
                     None => {
                         log::warn!("received empty member action");
+                    }
+                },
+                StorageRequest::InvitationCode(action) => match action {
+                    Some(action) => match action {
+                        InvitationCodeAction::Create {
+                            code,
+                            org_id,
+                            permissions,
+                            roles,
+                            replier,
+                        } => {
+                            create_invitation_code(
+                                client.clone(),
+                                code,
+                                org_id,
+                                permissions,
+                                roles,
+                                replier,
+                            )
+                            .await;
+                        }
+                    },
+                    None => {
+                        log::warn!("received empty invitation code action");
                     }
                 },
             }

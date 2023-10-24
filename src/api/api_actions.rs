@@ -14,7 +14,22 @@ pub fn get_api_actions() -> HashMap<String, Action<LogicRequest>> {
             Arc::new(move |request, sender| {
                 Box::pin(crate::api::actions::create_org::create_org(request, sender))
             }),
-            vec!["token_manager".to_string()],
+            Vec::new(),
+        ),
+    );
+
+    actions.insert(
+        "create_invitation_code".to_string(),
+        Action::new(
+            "create_invitation_code".to_string(),
+            Arc::new(move |request, sender| {
+                Box::pin(
+                    crate::api::actions::create_invitation_code::create_invitation_code(
+                        request, sender,
+                    ),
+                )
+            }),
+            Vec::new(),
         ),
     );
 

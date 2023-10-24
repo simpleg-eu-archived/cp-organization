@@ -36,7 +36,7 @@ pub async fn main() {
         .expect("expected amqp channel");
 
     let amqp_publisher_json: &str = r#"{
-                                            "queue_name": "org",
+                                            "queue_name": "invitation_code",
                                             "publish": {
                                                 "exchange": "",
                                                 "options": {
@@ -91,23 +91,14 @@ pub async fn main() {
     let amqp_input_consumer: AmqpInputConsumer =
         AmqpInputConsumer::new(channel, publisher, 5000u64);
     let mut request_header: RequestHeader =
-        RequestHeader::new("create_org".to_string(), "1234abcd".to_string());
+        RequestHeader::new("create_invitation_code".to_string(), "1234abcd".to_string());
 
     let request: Request = Request::new(
         request_header,
         json!({
-            "country": "es",
-            "name": "example",
-            "address": {
-                "country": "es",
-                "region": "albacete",
-                "city": "villarrobledo",
-                "street": "calle molino estrada",
-                "number": "37",
-                "additional": "",
-                "postal_code": "02600"
-            },
-            "user_id": "gabriel"
+            "org_id": "1234",
+            "permissions": ["abcd", "efgh"],
+            "roles": ["653846b428c2649821284c60"]
         }),
     );
 

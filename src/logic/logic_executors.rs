@@ -38,5 +38,14 @@ pub fn get_logic_executors() -> HashMap<
         }),
     );
 
+    executors.insert(
+        std::mem::discriminant(&LogicRequest::InvitationCode(None)),
+        Arc::new(move |request, sender| {
+            Box::pin(
+                crate::logic::executors::invitation_code::create_invitation_code(request, sender),
+            )
+        }),
+    );
+
     executors
 }

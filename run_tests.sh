@@ -17,6 +17,8 @@ else
   export $(cat ./env/local.env | xargs)
 fi
 
+rm -f -R ./target
+
 cargo build
 
 build_code=$?
@@ -30,6 +32,7 @@ fi
 
 mv ./target/debug/cp-organization ./cp-organization
 mv ./target/debug/test_create_organization_successfully ./test_create_organization_successfully
+mv ./target/debug/test_create_invitation_code_successfully ./test_create_invitation_code_successfully
 
 result_exit_code=0
 
@@ -50,11 +53,11 @@ db_init() {
 }
 # -----------------------
 
-db_init
+CP_ORGANIZATION_TEST_AMQP_CONNECTION_URI=$(bws secret get $CP_ORGANIZATION_TEST_AMQP_CONNECTION_URI_SECRET --access-token $CP_ORGANIZATION_SECRETS_MANAGER_ACCESS_TOKEN | jq -r '.value')
 
 # TEST CREATE ORGANIZATION SUCCESSFULLY, EXPECTED EXIT CODE: 0
 
-CP_ORGANIZATION_TEST_AMQP_CONNECTION_URI=$(bws secret get $CP_ORGANIZATION_TEST_AMQP_CONNECTION_URI_SECRET --access-token $CP_ORGANIZATION_SECRETS_MANAGER_ACCESS_TOKEN | jq -r '.value')
+db_init
 
 ./test_create_organization_successfully $CP_ORGANIZATION_TEST_AMQP_CONNECTION_URI
 
@@ -66,9 +69,24 @@ else
   result_exit_code=1
 fi
 
+# TEST CREATE INVITATION CODE SUCCESSFULLY, EXPECTED EXIT CODE: 0
+
+db_init
+
+./test_create_invitation_code_successfully $CP_ORGANIZATION_TEST_AMQP_CONNECTION_URI
+
+test_create_invitation_code_successfully_code=$?
+if [ $test_create_invitation_code_successfully_code -eq 0 ]; then
+  echo "Test create invitation code successfully: SUCCESS"
+else
+  echo "Test create invitation code successfully: FAILED"
+  result_exit_code=1
+fi
+
 kill $impl_pid
 
 rm ./cp-organization
 rm ./test_create_organization_successfully
+rm ./test_create_invitation_code_successfully
 
 exit $result_exit_code
