@@ -32,7 +32,7 @@ pub async fn create_member(
         let error = Error::new(
             ErrorKind::StorageError,
             format!(
-                "[storage.member_executor.handle_create_member] failed to insert member: {}",
+                "[storage.member_executor.create_member] failed to insert member: {}",
                 &error
             ),
         );
