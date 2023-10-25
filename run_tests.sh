@@ -57,31 +57,52 @@ CP_ORGANIZATION_TEST_AMQP_CONNECTION_URI=$(bws secret get $CP_ORGANIZATION_TEST_
 
 # TEST CREATE ORGANIZATION SUCCESSFULLY, EXPECTED EXIT CODE: 0
 
-db_init
+create_organization_successfully() {
+  db_init
 
-./test_create_organization_successfully $CP_ORGANIZATION_TEST_AMQP_CONNECTION_URI
+  ./test_create_organization_successfully $CP_ORGANIZATION_TEST_AMQP_CONNECTION_URI
 
-test_create_organization_successfully_code=$?
-if [ $test_create_organization_successfully_code -eq 0 ]; then
-  echo "Test create organization successfully: SUCCESS"
-else
-  echo "Test create organization successfully: FAILED"
-  result_exit_code=1
-fi
+  test_create_organization_successfully_code=$?
+  if [ $test_create_organization_successfully_code -eq 0 ]; then
+    echo "Test create organization successfully: SUCCESS"
+  else
+    echo "Test create organization successfully: FAILED"
+    result_exit_code=1
+  fi
+}
+
+create_organization_successfully
+
+sleep 1
+
+create_organization_successfully
+create_organization_successfully
 
 # TEST CREATE INVITATION CODE SUCCESSFULLY, EXPECTED EXIT CODE: 0
 
-db_init
+create_invitation_code_successfully() {
+  db_init
 
-./test_create_invitation_code_successfully $CP_ORGANIZATION_TEST_AMQP_CONNECTION_URI
+  ./test_create_invitation_code_successfully $CP_ORGANIZATION_TEST_AMQP_CONNECTION_URI
 
-test_create_invitation_code_successfully_code=$?
-if [ $test_create_invitation_code_successfully_code -eq 0 ]; then
-  echo "Test create invitation code successfully: SUCCESS"
-else
-  echo "Test create invitation code successfully: FAILED"
-  result_exit_code=1
-fi
+  test_create_invitation_code_successfully_code=$?
+
+  if [ $test_create_invitation_code_successfully_code -eq 0 ]; then
+    echo "Test create invitation code successfully: SUCCESS"
+  else
+    echo "Test create invitation code successfully: FAILED"
+    result_exit_code=1
+  fi
+}
+
+create_invitation_code_successfully
+
+sleep 1
+
+create_invitation_code_successfully
+create_invitation_code_successfully
+
+sleep 5
 
 kill $impl_pid
 
