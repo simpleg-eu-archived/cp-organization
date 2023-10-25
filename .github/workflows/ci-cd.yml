@@ -54,7 +54,7 @@ jobs:
         ports:
           - 27017:27017
           
-    timeout-minutes: 10
+    timeout-minutes: 15
 
     if: ${{ needs.changes.outputs.src == 'true' || needs.changes.outputs.test == 'true' }}
     steps:
